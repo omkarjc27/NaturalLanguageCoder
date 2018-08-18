@@ -44,7 +44,7 @@ Commit Format
 ```
 v x.x.x
 
-Title for Changes Made
+Names of edited files and details in short
 Functionality of the new commit
 Results Of the commit
 ``` 

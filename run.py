@@ -7,7 +7,6 @@ import tkMessageBox
 import re
 import readline
 import tkFont
-
 snippet = []
 intent = []
 
@@ -15,7 +14,7 @@ root = Tkinter.Tk()
 #root.overrideredirect(True)
 width = root.winfo_screenwidth()
 height = root.winfo_screenheight()
-root.geometry('%dx%d+%d+%d' % (width*0.5, height*0.5, width*0.25, height*0.25))
+#root.geometry('%dx%d+%d+%d' % (width*0.5, height*0.5, width*0.25, height*0.25))
 #canvas = Tkinter.Canvas(root, height=height*0.5, width=width*0.5, bg="black")
 #text_1 = canvas.create_text(width*0.5/2, (height*0.5/2)-50,fill='red',font="Times 100 bold" ,text="N L C")
 #text_2 = canvas.create_text(width*0.5/2, (height*0.5/2)+40,fill='pink',font="Times 20 bold" ,text="STARTING NLC")
@@ -38,12 +37,11 @@ def initiate():
 			
 	
 	#canvas.itemconfigure(text_2, text="Completed")
-'''
-root.after(1000,initiate)
-root.after(2000, root.destroy)
-root.mainloop()
-'''
-initiate()
+
+#root.after(1000,initiate)
+#root.after(2000, root.destroy)
+#root.mainloop()
+#initiate()
 root.destroy()
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 
