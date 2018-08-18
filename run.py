@@ -1,3 +1,4 @@
+import subprocess
 import jsonlines
 import json
 import Tkinter
@@ -49,10 +50,11 @@ root.destroy()
 root = Tkinter.Tk(className=" Natural Language Coder - ( Editor ) ")
 tbox = Tkinter.Canvas(root,bg='#f2f2f2')
 fileopened = False
-root.geometry('%dx%d+%d+%d' % (width, height-100, width, height-100))
+root.geometry('%dx%d+%d+%d' % (width, height, width, height-100))
 current_line = False
 button_list = []
-
+er_pyf = ""
+op_fil = ""
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -267,10 +269,17 @@ def open_command():
 		file.close()
 
 def save_command():
+	global button_list
 	file = tkFileDialog.asksaveasfile(mode='w')
 	if file != None:
-		data = textPad.get('1.0', END+'-1c')
-		file.write(data)
+		data = []
+		print(len(button_list))
+		for i in range(0,len(button_list)):
+			if i == button_list[i].row:
+				data.append(button_list[i].text.replace("____","\t"))
+		data = '\n'.join(data)	
+		print(data)
+		#writeout(data,file.name)
 		file.close()
 	else :
 		print('file=none')	
@@ -288,13 +297,15 @@ def doc_command():
 def editor(content):
 	lines = content.splitlines()
 	i = 0
+	if len(lines)==0:
+		lines.append(" ")
 	for line in lines:
-		line = line.replace("\t", "----")
+		line = line.replace("\t", "____")
 		bid = linebutton(line,i)
 		globals()["line"+str(i)]=bid
 		i+=1 
 	tbox.focus_set()
-	tbox.bind("<Up>",    lambda event: tbox.yview_scroll(-1, "units"))
+	tbox.bind("<Up>",	lambda event: tbox.yview_scroll(-1, "units"))
 	tbox.bind("<Down>",  lambda event: tbox.yview_scroll( 1, "units"))
 	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
@@ -311,8 +322,16 @@ def add_data():
 			snippet.append(item['snippet'])
 			intent.append(item['intent'])		
 def runfile():
-	proc = subprocess.Popen("python ", shell=True, stdout=subprocess.PIPE)			
-			
+	#pyflakes text.py
+	p = subprocess.Popen("pyflakes test.py", stdout=subprocess.PIPE, shell=True)
+ 	(output, err) = p.communicate()
+	if output == "":
+		p = subprocess.Popen("python test.py", stdout=subprocess.PIPE, shell=True)
+	 	(output, err) = p.communicate()
+	 	term.config(text=str(output))
+	else:
+		term.config(text=str(output))
+
 
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
 
@@ -335,19 +354,14 @@ else :
 		contents = readin(file)
 		editor(contents)
 
-save=Button(root,text="Save",font=Font2,bg ='#333333',foreground='#d9d9d9')		
-run=Button(root,text="Run",font=Font2,bg ='#333333',foreground='#d9d9d9')
-st=Button(root,text="Stop",font=Font2,bg ='#333333',foreground='#d9d9d9')
-ce=Button(root,text="Errors",font=Font2,bg ='#333333',foreground='#d9d9d9')		
-save.place(x=width-70,y=30,width=50,height=30)
-run.place(x=width-70,y=60,width=50,height=30)
-st.place(x=width-70,y=90,width=50,height=30)
-ce.place(x=width-70,y=120,width=50,height=30)
-
-current_row = Label(root,text="Not Editing",font=Font2,bg ='#333333',foreground='#d9d9d9')
-current_row.place(x=width-150,y=0,width=130,height=30)
-
-
+save=Button(root,text="Save",font=Font2,bg ='#333333',foreground='#d9d9d9',command=save_command)		
+run=Button(root,text="Run",font=Font2,bg ='#333333',foreground='#d9d9d9',command=runfile)
+save.place(x=width-80,y=30,width=60,height=30)
+run.place(x=width-80,y=60,width=60,height=30)
+term = Label(root,text="Terminal:",font=Font2,bg ='#333333',foreground='#d9d9d9',anchor=NW)
+current_row = Label(root,text="Not Editing",font=Font2,bg ='#333333',foreground='#d9d9d9',anchor=W)
+current_row.place(x=width-300,y=0,width=280,height=30)
+term.place(x=width-300,y=150,width=300,height=520)
 #			M 	E 	N 	U
 
 

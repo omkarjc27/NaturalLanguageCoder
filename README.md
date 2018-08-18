@@ -13,9 +13,9 @@ These instructions will get you a copy of the NLC up and running on your local m
 
 ### Prerequisites
 
-* Python 2.x.x
-* Tkinter (Which Supports Python 2.x.x)
-
+* Python 2.7.x
+* Tkinter (Which Supports Python 2.7.x)
+* PyFlakes
 
 ## Running the tests
 
