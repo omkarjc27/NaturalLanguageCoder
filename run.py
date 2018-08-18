@@ -49,9 +49,10 @@ root.destroy()
 root = Tkinter.Tk(className=" Natural Language Coder - ( Editor ) ")
 tbox = Tkinter.Canvas(root,bg='#f2f2f2')
 fileopened = False
-root.geometry('%dx%d+%d+%d' % (width, height, width, height))
+root.geometry('%dx%d+%d+%d' % (width, height-100, width, height-100))
 current_line = False
 button_list = []
+
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -81,17 +82,13 @@ class AutocompleteEntry(Entry):
 		self.var = self["textvariable"]
 		if self.var == '':
 			self.var = self["textvariable"] = StringVar()
-
 		self.var.trace('w', self.changed)
 		self.bind("<Right>", self.selection)
 		self.bind("<Up>", self.moveUp)
 		self.bind("<Down>", self.moveDown)
-		
-		self.listboxUp = False
-
 	def changed(self, name, index, mode):
 		if self.var.get() == '':
-			if self.listboxUp:
+			if 'listboxUp' in locals()():
 				self.listbox.destroy()
 				self.listboxUp = False
 		else:
@@ -108,12 +105,12 @@ class AutocompleteEntry(Entry):
 				for w in words:
 					self.listbox.insert(END,w)
 			else:
-				if self.listboxUp:
+				if 'listboxUp' in locals():
 					self.listbox.destroy()
 					self.listboxUp = False
 		
 	def selection(self, event):
-		if self.listboxUp:
+		if 'listboxUp' in locals():
 			self.var.set(self.listbox.get(ACTIVE))
 			#self.parentbutton.text = self.listbox.get(ACTIVE)
 			self.listbox.destroy()
@@ -121,7 +118,7 @@ class AutocompleteEntry(Entry):
 			self.icursor(END)
 
 	def moveUp(self, event):
-		if self.listboxUp:
+		if 'listboxUp' in locals():
 			if self.listbox.curselection() == ():
 				index = '0'
 			else:
@@ -136,13 +133,17 @@ class AutocompleteEntry(Entry):
 		else:
 			global new_edit_row
 			global button_list
+			global tbox
 			new_edit_row = int(self.line_button.row)-1
 			for line in button_list:
 				if line.row == new_edit_row:
 					line.lineclick()
+			tbox.focus_set()
+			#tbox.yview_scroll(1, "pages")
+				
 			
 	def moveDown(self, event):
-		if self.listboxUp:
+		if 'listboxUp' in locals() :
 			if self.listbox.curselection() == ():
 				index = '0'
 			else:
@@ -156,11 +157,14 @@ class AutocompleteEntry(Entry):
 		else:
 			global new_edit_row
 			global button_list
+			global tbox
 			new_edit_row = int(self.line_button.row)+1
 			for line in button_list:
 				if line.row == new_edit_row:
 					line.lineclick()			
-					
+			tbox.focus_set()
+			#tbox.yview_scroll(-1, "pages")
+				
 	def comparison(self):
 		return [ w for w in self.autocompleteList if self.matchesFunction(self.var.get(), w) ]
 
@@ -190,7 +194,10 @@ class linebutton():
 		tbox.itemconfigure(self.wind, window=self.sugg)
 		self.set_text(self.sugg,self.text)
 		current_line = self
+		global current_row
+		current_row.config(text="Editing Line "+str(self.row))
 		button_list.remove(self)
+
 		
 	def declare(self):
 		colort,font = self.find_color(self.text)
@@ -282,13 +289,17 @@ def editor(content):
 	lines = content.splitlines()
 	i = 0
 	for line in lines:
+		line = line.replace("\t", "----")
 		bid = linebutton(line,i)
 		globals()["line"+str(i)]=bid
 		i+=1 
-	tbox.config(width=width,height=height-30)
+	tbox.focus_set()
+	tbox.bind("<Up>",    lambda event: tbox.yview_scroll(-1, "units"))
+	tbox.bind("<Down>",  lambda event: tbox.yview_scroll( 1, "units"))
+	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
 	vbar.config(command=tbox.yview,bg ='#333333',activebackground='#333333',bd=0)
-	vbar.place(x=(width)-20,y=0,height=120,width=15)
+	vbar.place(x=(width)-20,y=0,height=150,width=15)
 	tbox.place(x=0,y=0)
 	tbox.config(scrollregion=(0,0,0,28*i))
 	tbox.config(yscrollcommand=vbar.set)
@@ -328,10 +339,13 @@ save=Button(root,text="Save",font=Font2,bg ='#333333',foreground='#d9d9d9')
 run=Button(root,text="Run",font=Font2,bg ='#333333',foreground='#d9d9d9')
 st=Button(root,text="Stop",font=Font2,bg ='#333333',foreground='#d9d9d9')
 ce=Button(root,text="Errors",font=Font2,bg ='#333333',foreground='#d9d9d9')		
-save.place(x=width-70,y=0,width=50,height=30)
-run.place(x=width-70,y=30,width=50,height=30)
-st.place(x=width-70,y=60,width=50,height=30)
-ce.place(x=width-70,y=90,width=50,height=30)
+save.place(x=width-70,y=30,width=50,height=30)
+run.place(x=width-70,y=60,width=50,height=30)
+st.place(x=width-70,y=90,width=50,height=30)
+ce.place(x=width-70,y=120,width=50,height=30)
+
+current_row = Label(root,text="Not Editing",font=Font2,bg ='#333333',foreground='#d9d9d9')
+current_row.place(x=width-150,y=0,width=130,height=30)
 
 
 #			M 	E 	N 	U
