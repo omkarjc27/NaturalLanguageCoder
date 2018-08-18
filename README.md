@@ -32,9 +32,6 @@ run the python file run as follows
 ```
 python run.py
 ```
-
-
-
 ## Built With
 
 * [Conala-Corpus](www.conala-corpus.com) - The Dataset used
