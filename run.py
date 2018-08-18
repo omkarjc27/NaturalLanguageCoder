@@ -301,6 +301,8 @@ def add_data():
 		for item in jsonlines.Reader(f):
 			snippet.append(item['snippet'])
 			intent.append(item['intent'])		
+def runfile():
+	proc = subprocess.Popen("python ", shell=True, stdout=subprocess.PIPE)			
 			
 
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
