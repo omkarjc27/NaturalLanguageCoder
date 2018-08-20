@@ -49,13 +49,13 @@ root.destroy()
 current_nlc_version = "(v0.1)"
 root = Tkinter.Tk(className=" Natural Language Coder - "+current_nlc_version)
 tbox = Tkinter.Canvas(root,bg='#f2f2f2')
+file = None
 fileopened = False
 root.geometry('%dx%d+%d+%d' % (width, height, width, height-100))
 current_line = False
 button_list = []
 er_pyf = ""
 op_fil = ""
-
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -89,9 +89,13 @@ class AutocompleteEntry(Entry):
 		self.bind("<Right>", self.selection)
 		self.bind("<Up>", self.moveUp)
 		self.bind("<Down>", self.moveDown)
+		self.bind("<Return>", self.moveDown)
+		self.bind("<Control-s>",lambda event:save_command())
+		self.bind("<Tab>",self.add_tab)
+		
 	def changed(self, name, index, mode):
 		if self.var.get() == '':
-			if 'listboxUp' in locals()():
+			if 'listboxUp' in locals():
 				self.listbox.destroy()
 				self.listboxUp = False
 		else:
@@ -100,6 +104,7 @@ class AutocompleteEntry(Entry):
 				if not self.listboxUp:
 					self.listbox = Listbox(width=self["width"], height=self.listboxLength)
 					self.listbox.bind("<Button-1>", self.selection)
+					self.listbox.bind("<Return>", self.selection)
 					self.listbox.bind("<Right>", self.selection)
 					self.listbox.place(x=self.winfo_x(), y=self.winfo_y() + self.winfo_height())
 					self.listboxUp = True
@@ -162,14 +167,21 @@ class AutocompleteEntry(Entry):
 			global button_list
 			global tbox
 			new_edit_row = int(self.line_button.row)+1
+			got_line = False
 			for line in button_list:
 				if line.row == new_edit_row:
 					line.lineclick()			
+					got_line = True
+			if got_line != True:
+				new_line = linebutton("",new_edit_row)
+				new_line.lineclick()
 			tbox.focus_set()
-			#tbox.yview_scroll(-1, "pages")
 				
 	def comparison(self):
 		return [ w for w in self.autocompleteList if self.matchesFunction(self.var.get(), w) ]
+	def add_tab(self):
+		print("add tab")
+
 
 class linebutton():
 	def __init__(self,line,i):
@@ -257,7 +269,7 @@ def writeout(data,file): 															#write to a text file
 	file.close()
 
 def open_command(n):
-	
+	global file
 	if n == 0:
 		file = tkFileDialog.askopenfile(parent=root,mode='rb',title='Select a file to Open')
 	else :
@@ -272,14 +284,14 @@ def open_command(n):
 		if "nobutton" in globals():
 			nobutton.destroy()
 		if contents=="":
-			contents = "\'\'\'\nSample Code\n\'\'\'"	
+			contents = "\t"	
 		editor(contents)
 		file.close()
 	term.config(text="",fg="#333333",anchor=S)
 
 def save_command():
 	global button_list
-	file = tkFileDialog.asksaveasfile(mode='w')
+	global file
 	if file != None:
 		global current_line
 		if current_line != False:
@@ -290,6 +302,8 @@ def save_command():
 		data = []
 		for i in range(0,len(button_list)):
 			if i == button_list[i].row:
+				if button_list[i].text == "":
+					button_list[i].text = "____"
 				data.append(button_list[i].text.replace("____","\t"))
 		data = '\n'.join(data)	
 		writeout(data,file.name)
@@ -328,6 +342,7 @@ def editor(content):
 	tbox.focus_set()
 	tbox.bind("<Up>",	lambda event: tbox.yview_scroll(-1, "units"))
 	tbox.bind("<Down>",  lambda event: tbox.yview_scroll( 1, "units"))
+	tbox.bind("<Control-s>",lambda event:save_command())
 	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
 	vbar.config(command=tbox.yview,bg ='#333333',activebackground='#333333',bd=0)
