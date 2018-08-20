@@ -46,8 +46,8 @@ def initiate():
 root.destroy()
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 
-
-root = Tkinter.Tk(className=" Natural Language Coder - ( Editor ) ")
+current_nlc_version = "(v0.1)"
+root = Tkinter.Tk(className=" Natural Language Coder - "+current_nlc_version)
 tbox = Tkinter.Canvas(root,bg='#f2f2f2')
 fileopened = False
 root.geometry('%dx%d+%d+%d' % (width, height, width, height-100))
@@ -55,6 +55,7 @@ current_line = False
 button_list = []
 er_pyf = ""
 op_fil = ""
+
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -174,7 +175,7 @@ class linebutton():
 	def __init__(self,line,i):
 		colort,font = self.find_color(line)
 		self.id = Tkinter.Button(tbox,text=line,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground='#f2f2f2',activeforeground=colort)
-		self.wind = tbox.create_window(0,i*28,width=width,height=28,window=self.id,anchor=NW)
+		self.wind = tbox.create_window(0,i*28,width=width-302,height=28,window=self.id,anchor=NW)
 		self.row = i
 		self.text = line
 		global button_list
@@ -204,7 +205,7 @@ class linebutton():
 	def declare(self):
 		colort,font = self.find_color(self.text)
 		self.id = Tkinter.Button(tbox,text=self.text,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground='#f2f2f2',activeforeground=colort)
-		self.wind = tbox.create_window(0,self.row*28,width=width,height=28,window=self.id,anchor=NW)
+		self.wind = tbox.create_window(0,self.row*28,width=width-302,height=28,window=self.id,anchor=NW)
 		global button_list
 		button_list.append(self)
 
@@ -255,31 +256,43 @@ def writeout(data,file): 															#write to a text file
 	result = file.write(data)
 	file.close()
 
-def open_command():	
-	file = tkFileDialog.askopenfile(parent=root,mode='rb',title='Select a file to Open')
+def open_command(n):
+	
+	if n == 0:
+		file = tkFileDialog.askopenfile(parent=root,mode='rb',title='Select a file to Open')
+	else :
+		file = open(readin("cache_nlc"),"r")	
+	term.config(text="Opening"+str(file.name),fg="#333333",anchor=S)
 	if file != None:
-		root.title(" Natural Language Coder - ( Editor ) - "+file.name)
+		root.title(" Natural Language Coder "+current_nlc_version+" - "+file.name)
 		writeout(file.name,"cache_nlc")
 		globals()["tbox"] = tbox
 		fileopened = True
-		contents = file.read()
+		contents = readin(file.name)
 		if "nobutton" in globals():
 			nobutton.destroy()
+		if contents=="":
+			contents = "\'\'\'\nSample Code\n\'\'\'"	
 		editor(contents)
 		file.close()
+	term.config(text="",fg="#333333",anchor=S)
 
 def save_command():
 	global button_list
 	file = tkFileDialog.asksaveasfile(mode='w')
 	if file != None:
+		global current_line
+		if current_line != False:
+			current_line.text = current_line.sugg.get() 
+			current_line.sugg.destroy()
+			current_line.declare()	
+			current_line = False
 		data = []
-		print(len(button_list))
 		for i in range(0,len(button_list)):
 			if i == button_list[i].row:
 				data.append(button_list[i].text.replace("____","\t"))
 		data = '\n'.join(data)	
-		print(data)
-		#writeout(data,file.name)
+		writeout(data,file.name)
 		file.close()
 	else :
 		print('file=none')	
@@ -297,13 +310,21 @@ def doc_command():
 def editor(content):
 	lines = content.splitlines()
 	i = 0
+	global button_list
 	if len(lines)==0:
 		lines.append(" ")
+	if len(button_list)>1:
+		for button in button_list:
+			button.id.destroy()
+		del button_list[:]	
+
 	for line in lines:
 		line = line.replace("\t", "____")
 		bid = linebutton(line,i)
 		globals()["line"+str(i)]=bid
 		i+=1 
+	if 'welc_screen'in globals():
+		welc_screen.destroy()	
 	tbox.focus_set()
 	tbox.bind("<Up>",	lambda event: tbox.yview_scroll(-1, "units"))
 	tbox.bind("<Down>",  lambda event: tbox.yview_scroll( 1, "units"))
@@ -328,9 +349,9 @@ def runfile():
 	if output == "":
 		p = subprocess.Popen("python test.py", stdout=subprocess.PIPE, shell=True)
 	 	(output, err) = p.communicate()
-	 	term.config(text=str(output))
+	 	term.config(text="Output:\n"+str(output),fg="#009933",anchor=S)
 	else:
-		term.config(text=str(output))
+		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=S)
 
 
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
@@ -340,28 +361,23 @@ Font2 = tkFont.Font(family='Noto Sans ',size=10)
 Font3 = tkFont.Font(family='Noto Mono ',size=16)
 
 #	C 	O 	D 	E 		M 	E 	N 	U
-
-if readin("cache_nlc") == '':
-	nobutton = Tkinter.Button(root,text='Open a PROJECT',font=Font2,command=open_command,bg ='#333333',foreground='#d9d9d9')
-	nobutton.place(x=10,y=45)
-else :
-	file = readin("cache_nlc")	
-	if file != None:
-		root.title(" Natural Language Coder - ( Editor ) - "+file)
-		writeout(file,"cache_nlc")
-		globals()["tbox"] = tbox
-		fileopened = True
-		contents = readin(file)
-		editor(contents)
-
 save=Button(root,text="Save",font=Font2,bg ='#333333',foreground='#d9d9d9',command=save_command)		
 run=Button(root,text="Run",font=Font2,bg ='#333333',foreground='#d9d9d9',command=runfile)
 save.place(x=width-80,y=30,width=60,height=30)
 run.place(x=width-80,y=60,width=60,height=30)
-term = Label(root,text="Terminal:",font=Font2,bg ='#333333',foreground='#d9d9d9',anchor=NW)
-current_row = Label(root,text="Not Editing",font=Font2,bg ='#333333',foreground='#d9d9d9',anchor=W)
-current_row.place(x=width-300,y=0,width=280,height=30)
-term.place(x=width-300,y=150,width=300,height=520)
+term = Label(root,text="",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#f2f2f2',foreground='#333333',anchor=S)
+current_row = Label(root,text="Not Editing",font=Font2,bg ='#f2f2f2',foreground='#333333',anchor=W)
+current_row.place(x=width-300,y=2,width=280,height=30)
+term.place(x=width-300,y=150,width=300,height=518)
+
+if readin("cache_nlc") == '':
+	tbox.place(x=0,y=0)
+	tbox.config(width=width,height=height-100)
+	welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg ='#f2f2f2',foreground='#333333',anchor=W)
+	welc_screen.place(x=0,y=0)
+else :
+	open_command(1)
+	
 #			M 	E 	N 	U
 
 
@@ -376,7 +392,7 @@ promenu.add_command(label="  Modules",font=Font2)
 promenu.add_command(label="  Languages",font=Font2)
 promenu.add_separator()
 promenu.add_command(label="  New Project",font=Font2)
-promenu.add_command(label="  Open Project", command=open_command,font=Font2)
+promenu.add_command(label="  Open Project", command=lambda:open_command(0),font=Font2)
 promenu.add_command(label="  Save Project", command=save_command,font=Font2)
 promenu.add_separator()
 promenu.add_command(label="  UI Themes",font=Font2)

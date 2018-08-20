@@ -57,7 +57,4 @@ We use [SemVer](http://semver.org/) for versioning
 
 * **Omkar Chalke** - *Initial work* 
 
-## License
-
-This project is licensed under the MIT License 
 
