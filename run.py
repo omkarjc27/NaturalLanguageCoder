@@ -24,15 +24,15 @@ def initiate():
 	global snippet
 	global intent
 	#canvas.itemconfigure(text_2, text="INITIATING SYSTEM")
-	with open('conala-corpus/conala-train.json', 'rb') as f:
+	with open('nlc_data.json', 'rb') as f:
 		for item in json.load(f):
 			snippet.append(item['snippet'])
-			intent.append(item['intent'])		
+			intent.append(item['rewritten_intent'])		
 	#		canvas.itemconfigure(text_2, text="Acessing DATABASE :"+str(len(snippet)*100/(500*33))+"%")
-	with open('conala-corpus/conala-train.json', 'rb') as f:
-		for item in json.load(f):
-			snippet.append(item['snippet'])
-			intent.append(item['intent'])		
+	#with open('conala-corpus/conala-train.json', 'rb') as f:
+	#	for item in json.load(f):
+	#		snippet.append(item['snippet'])
+	#		intent.append(item['intent'])		
 	#		canvas.itemconfigure(text_2, text="Acessing DATABASE :"+str(len(snippet)*100/(2879*33))+"%")
 	
 			
@@ -42,7 +42,7 @@ def initiate():
 #root.after(1000,initiate)
 #root.after(2000, root.destroy)
 #root.mainloop()
-#initiate()
+initiate()
 root.destroy()
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 
@@ -56,6 +56,8 @@ current_line = False
 button_list = []
 er_pyf = ""
 op_fil = ""
+lista = ['a', 'actions', 'additional', 'also', 'an', 'and', 'angle', 'are', 'as', 'be', 'bind', 'bracket', 'brackets', 'button', 'can', 'cases', 'configure', 'course', 'detail', 'enter', 'event', 'events', 'example', 'field', 'fields', 'for', 'give', 'important', 'in', 'information', 'is', 'it', 'just', 'key', 'keyboard', 'kind', 'leave', 'left', 'like', 'manager', 'many', 'match', 'modifier', 'most', 'of', 'or', 'others', 'out', 'part', 'simplify', 'space', 'specifier', 'specifies', 'string;', 'that', 'the', 'there', 'to', 'type', 'unless', 'use', 'used', 'user', 'various', 'ways', 'we', 'window', 'wish', 'you']
+
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -73,6 +75,7 @@ class AutocompleteEntry(Entry):
 		else:
 			def matches(fieldValue, acListEntry):
 				pattern = re.compile('.*' + re.escape(fieldValue) + '.*', re.IGNORECASE)
+				print(type(acListEntry))
 				return re.match(pattern, acListEntry)
 				
 			self.matchesFunction = matches
@@ -91,6 +94,7 @@ class AutocompleteEntry(Entry):
 		self.bind("<Down>", self.moveDown)
 		self.bind("<Return>", self.moveDown)
 		self.bind("<Control-s>",lambda event:save_command())
+		self.bind("<Control-r>",lambda event:runfile())
 		self.bind("<Tab>",self.add_tab)
 		
 	def changed(self, name, index, mode):
@@ -101,8 +105,8 @@ class AutocompleteEntry(Entry):
 		else:
 			words = self.comparison()
 			if words:
-				if not self.listboxUp:
-					self.listbox = Listbox(width=self["width"], height=self.listboxLength)
+				if 'listboxUp' not in locals():
+					self.listbox = Listbox(width=50, height=100)
 					self.listbox.bind("<Button-1>", self.selection)
 					self.listbox.bind("<Return>", self.selection)
 					self.listbox.bind("<Right>", self.selection)
@@ -178,7 +182,8 @@ class AutocompleteEntry(Entry):
 			tbox.focus_set()
 				
 	def comparison(self):
-		return [ w for w in self.autocompleteList if self.matchesFunction(self.var.get(), w) ]
+		pattern = re.compile('.*' + self.var.get() + '.*')
+		return [w for w in self.autocompleteList if re.match(pattern, w)]
 	def add_tab(self):
 		print("add tab")
 
@@ -199,7 +204,7 @@ class linebutton():
 		sugg.insert(0,text)
 
 	def lineclick(self):
-		self.sugg = AutocompleteEntry(intent,self, tbox)
+		self.sugg = AutocompleteEntry(lista,self, tbox)
 		self.sugg.config({"background": "#f2f2f2","fg": "#000000"},bd=0,selectborderwidth=0)
 		global current_line
 		if current_line != False:
@@ -284,7 +289,7 @@ def open_command(n):
 		if "nobutton" in globals():
 			nobutton.destroy()
 		if contents=="":
-			contents = "\t"	
+			contents = " "	
 		editor(contents)
 		file.close()
 	term.config(text="",fg="#333333",anchor=S)
@@ -343,6 +348,7 @@ def editor(content):
 	tbox.bind("<Up>",	lambda event: tbox.yview_scroll(-1, "units"))
 	tbox.bind("<Down>",  lambda event: tbox.yview_scroll( 1, "units"))
 	tbox.bind("<Control-s>",lambda event:save_command())
+	tbox.bind("<Control-r>",lambda event:runfile())
 	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
 	vbar.config(command=tbox.yview,bg ='#333333',activebackground='#333333',bd=0)
