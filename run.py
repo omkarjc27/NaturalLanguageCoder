@@ -56,8 +56,7 @@ current_line = False
 button_list = []
 er_pyf = ""
 op_fil = ""
-lista = ['a', 'actions', 'additional', 'also', 'an', 'and', 'angle', 'are', 'as', 'be', 'bind', 'bracket', 'brackets', 'button', 'can', 'cases', 'configure', 'course', 'detail', 'enter', 'event', 'events', 'example', 'field', 'fields', 'for', 'give', 'important', 'in', 'information', 'is', 'it', 'just', 'key', 'keyboard', 'kind', 'leave', 'left', 'like', 'manager', 'many', 'match', 'modifier', 'most', 'of', 'or', 'others', 'out', 'part', 'simplify', 'space', 'specifier', 'specifies', 'string;', 'that', 'the', 'there', 'to', 'type', 'unless', 'use', 'used', 'user', 'various', 'ways', 'we', 'window', 'wish', 'you']
-
+listboxUp_b = False
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -92,45 +91,54 @@ class AutocompleteEntry(Entry):
 		self.bind("<Right>", self.selection)
 		self.bind("<Up>", self.moveUp)
 		self.bind("<Down>", self.moveDown)
-		self.bind("<Return>", self.moveDown)
+		self.bind("<Return>", lambda event:self.moveDown(event,ent=True))
 		self.bind("<Control-s>",lambda event:save_command())
 		self.bind("<Control-r>",lambda event:runfile())
 		self.bind("<Tab>",self.add_tab)
 		
 	def changed(self, name, index, mode):
+		global listboxUp_b
 		if self.var.get() == '':
-			if 'listboxUp' in locals():
+			if listboxUp_b == True:
 				self.listbox.destroy()
 				self.listboxUp = False
+				listboxUp_b = False
 		else:
 			words = self.comparison()
 			if words:
-				if 'listboxUp' not in locals():
-					self.listbox = Listbox(width=50, height=100)
+				if listboxUp_b != True:
+					global width
+					self.listbox = Listbox(width=50, height=len(words))
 					self.listbox.bind("<Button-1>", self.selection)
 					self.listbox.bind("<Return>", self.selection)
 					self.listbox.bind("<Right>", self.selection)
-					self.listbox.place(x=self.winfo_x(), y=self.winfo_y() + self.winfo_height())
+					self.listbox.place(x=0, y=(self.line_button.row+1)*28)
+					self.listbox.config(font=Font2)
 					self.listboxUp = True
+					listboxUp_b = True
 				
 				self.listbox.delete(0, END)
 				for w in words:
 					self.listbox.insert(END,w)
 			else:
-				if 'listboxUp' in locals():
+				if listboxUp_b == True:
 					self.listbox.destroy()
 					self.listboxUp = False
+					listboxUp_b = False
 		
 	def selection(self, event):
-		if 'listboxUp' in locals():
+		global listboxUp_b
+		if listboxUp_b == True:
 			self.var.set(self.listbox.get(ACTIVE))
 			#self.parentbutton.text = self.listbox.get(ACTIVE)
 			self.listbox.destroy()
 			self.listboxUp = False
+			listboxUp_b = False
 			self.icursor(END)
 
 	def moveUp(self, event):
-		if 'listboxUp' in locals():
+		global listboxUp_b
+		if listboxUp_b == True:
 			if self.listbox.curselection() == ():
 				index = '0'
 			else:
@@ -142,6 +150,7 @@ class AutocompleteEntry(Entry):
 				self.listbox.see(index) # Scroll!
 				self.listbox.selection_set(first=index)
 				self.listbox.activate(index)
+					
 		else:
 			global new_edit_row
 			global button_list
@@ -154,19 +163,25 @@ class AutocompleteEntry(Entry):
 			#tbox.yview_scroll(1, "pages")
 				
 			
-	def moveDown(self, event):
-		if 'listboxUp' in locals() :
+	def moveDown(self, event,ent=False):
+
+		global listboxUp_b
+		if listboxUp_b == True and ent == False:
 			if self.listbox.curselection() == ():
 				index = '0'
 			else:
 				index = self.listbox.curselection()[0]
 			if index != END:						
 				self.listbox.selection_clear(first=index)
-				index = str(int(index) + 1)
+				index = str(int(index)+1)
 				self.listbox.see(index) # Scroll!
 				self.listbox.selection_set(first=index)
 				self.listbox.activate(index) 
-		else:
+				
+					
+		elif listboxUp_b == True and ent == True:
+			self.selection(event)
+		elif listboxUp_b == False :
 			global new_edit_row
 			global button_list
 			global tbox
@@ -182,8 +197,12 @@ class AutocompleteEntry(Entry):
 			tbox.focus_set()
 				
 	def comparison(self):
-		pattern = re.compile('.*' + self.var.get() + '.*')
-		return [w for w in self.autocompleteList if re.match(pattern, w)]
+		pattern =  self.var.get()
+		matches = []
+		for w in self.autocompleteList:
+			if w!= None and len(pattern)>=3 and pattern in w.encode('utf-8') :
+				matches.append(w.encode('utf-8'))
+		return matches
 	def add_tab(self):
 		print("add tab")
 
@@ -204,8 +223,8 @@ class linebutton():
 		sugg.insert(0,text)
 
 	def lineclick(self):
-		self.sugg = AutocompleteEntry(lista,self, tbox)
-		self.sugg.config({"background": "#f2f2f2","fg": "#000000"},bd=0,selectborderwidth=0)
+		self.sugg = AutocompleteEntry(intent,self, tbox)
+		self.sugg.config({"background": "#f2f2f2","fg": "#000000"},bd=0,selectborderwidth=0,font=Font2)
 		global current_line
 		if current_line != False:
 			current_line.text = current_line.sugg.get() 
