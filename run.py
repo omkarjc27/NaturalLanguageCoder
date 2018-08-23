@@ -94,7 +94,10 @@ class AutocompleteEntry(Entry):
 		self.bind("<Return>", lambda event:self.moveDown(event,ent=True))
 		self.bind("<Control-s>",lambda event:save_command())
 		self.bind("<Control-r>",lambda event:runfile())
-		self.bind("<Tab>",self.add_tab)
+		self.bind("<Tab>",lambda event:self.add_short(event,"\t"))
+		self.bind("<parenleft>",lambda event:self.add_short(event,"()"))
+		self.bind('<quotedbl>',lambda event:self.add_short(event,"\"\""))
+		self.bind("<quoteright>",lambda event:self.add_short(event,"\'\'"))
 		
 	def changed(self, name, index, mode):
 		global listboxUp_b
@@ -203,9 +206,11 @@ class AutocompleteEntry(Entry):
 			if w!= None and len(pattern)>=3 and pattern in w.encode('utf-8') :
 				matches.append(w.encode('utf-8'))
 		return matches
-	def add_tab(self):
-		print("add tab")
-
+	def add_short(self,event,text):
+		if listboxUp_b != True:
+			self.insert(self.index(INSERT),text)
+			return 'break'	
+			
 
 class linebutton():
 	def __init__(self,line,i):
@@ -325,10 +330,11 @@ def save_command():
 			current_line = False
 		data = []
 		for i in range(0,len(button_list)):
-			if i == button_list[i].row:
-				if button_list[i].text == "":
-					button_list[i].text = "____"
-				data.append(button_list[i].text.replace("____","\t"))
+			for k in range(0,len(button_list)):
+				if i == button_list[k].row:
+					if button_list[k].text == "":
+						button_list[k].text = "____"	
+					data.append(button_list[k].text.replace("____","\t"))
 		data = '\n'.join(data)	
 		writeout(data,file.name)
 		file.close()
