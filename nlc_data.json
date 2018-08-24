@@ -14290,11 +14290,5 @@
     "rewritten_intent": "concatenate a list of strings `['a', 'b', 'c']`",
     "snippet": "\"\"\"\"\"\".join(['a', 'b', 'c'])",
     "question_id": 6726636
-  },
-  {
-    "intent": "Python -Remove Time from Datetime String",
-    "rewritten_intent": "Format a datetime string `when` to extract date only",
-    "snippet": "then = datetime.datetime.strptime(when, '%Y-%m-%d').date()",
-    "question_id": 26153795
   }
 ]

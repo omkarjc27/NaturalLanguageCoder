@@ -8,6 +8,8 @@ import tkMessageBox
 import re
 import readline
 import tkFont
+import ast
+
 snippet = []
 intent = []
 
@@ -46,7 +48,7 @@ initiate()
 root.destroy()
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 
-current_nlc_version = "(v0.1)"
+current_nlc_version = "(v0.2)"
 root = Tkinter.Tk(className=" Natural Language Coder - "+current_nlc_version)
 tbox = Tkinter.Canvas(root,bg='#f2f2f2')
 file = None
@@ -115,6 +117,10 @@ class AutocompleteEntry(Entry):
 					self.listbox.bind("<Button-1>", self.selection)
 					self.listbox.bind("<Return>", self.selection)
 					self.listbox.bind("<Right>", self.selection)
+					self.listbox.bind("<Tab>",lambda event:self.add_short(event,"\t"))
+					self.listbox.bind("<parenleft>",lambda event:self.add_short(event,"()"))
+					self.listbox.bind('<quotedbl>',lambda event:self.add_short(event,"\"\""))
+					self.listbox.bind("<quoteright>",lambda event:self.add_short(event,"\'\'"))
 					self.listbox.place(x=0, y=(self.line_button.row+1)*28)
 					self.listbox.config(font=Font2)
 					self.listboxUp = True
@@ -208,7 +214,10 @@ class AutocompleteEntry(Entry):
 		return matches
 	def add_short(self,event,text):
 		if listboxUp_b != True:
-			self.insert(self.index(INSERT),text)
+			t = self.index(INSERT)
+			self.insert(t,text)
+			if text == '\"\"' or text == '\'\'' or text== '()':
+				self.icursor(t+1)
 			return 'break'	
 			
 
@@ -286,6 +295,68 @@ class linebutton():
 			font = tkFont.Font(family='Times Bold',size=14)	
 		return color,font	
 
+def pythonize(line):
+	# x = concatenate 'x' of integers
+	# z = Concatenate elements of a list 'y' of multiple integers to a single integer
+	#"Concatenate elements of a list 'x' of multiple integers to a single integer"
+	#"sum(d * 10 ** i for i, d in enumerate(x[::-1]))",
+	'''
+	y =  range(10)
+	z = Concatenate elements of a list 'y' of multiple integers to a single integer
+	print(z)
+	'''
+	for inten in intent:
+		if inten != None:
+			varl = []
+			revarl = []
+			aline = line.split("=")
+			if len(aline) == 2:	
+				vline = aline[0]
+				tline = aline[1]
+			elif len(aline) == 1:
+				vline=""
+				tline=aline[0]
+			splits = inten.split("\'")
+			i = 0
+			j = 1
+			nline = line
+			if len(aline)==2 or len(aline)==1:
+				for split in splits:
+					if i%2 == 0:
+						if split not in tline:
+							j=0	
+					else:
+						if j!=0:
+							varl.append(split)
+					i+=1
+				if j == 1:
+					resultant_intent = inten
+					i=0
+					splits = tline.split('\'')
+					for split in splits:
+						if i%2 ==1:
+							revarl.append(split)
+						i+=1
+					snip=str(snippet[intent.index(inten)])
+					if snip != None:
+						for var in varl:
+							if var in snip:
+								snip = snip.replace(var,revarl[varl.index(var)])
+						return(str(vline)+"="+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
+
+def depythonize(line):
+	if line != None:
+		if '#nlc_d_$_' in line:
+			ts = line.split('#')
+			ldata = ts[1]
+			idata = ldata.split('_$_')
+			inten = str(intent[int(idata[1])])
+			varl = ast.literal_eval(idata[2])
+			revarl = ast.literal_eval(idata[3])
+			for var in varl:
+				inten = inten.replace(var,revarl[varl.index(var)])
+			return(inten)	
+
 def readin(rfile):#read a text file
 	file = open(rfile,"r")
 	result = file.read()
@@ -332,9 +403,13 @@ def save_command():
 		for i in range(0,len(button_list)):
 			for k in range(0,len(button_list)):
 				if i == button_list[k].row:
-					if button_list[k].text == "":
-						button_list[k].text = "____"	
-					data.append(button_list[k].text.replace("____","\t"))
+					oline = button_list[k].text.replace("____","\t")
+					line = pythonize(oline)
+					if line != None: 
+						data.append(line)
+					else :
+						data.append(oline)	
+					
 		data = '\n'.join(data)	
 		writeout(data,file.name)
 		file.close()
@@ -363,6 +438,9 @@ def editor(content):
 		del button_list[:]	
 
 	for line in lines:
+		tes = depythonize(line)
+		if tes != None:
+			line = depythonize(line)
 		line = line.replace("\t", "____")
 		bid = linebutton(line,i)
 		globals()["line"+str(i)]=bid

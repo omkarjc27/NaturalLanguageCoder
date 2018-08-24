@@ -16,6 +16,7 @@ These instructions will get you a copy of the NLC up and running on your local m
 * Python 2.7.x
 * Tkinter (Which Supports Python 2.7.x)
 * PyFlakes
+* Json
 
 
 ## Running the tests
@@ -44,10 +45,18 @@ python run.py
 Commit Format 
 ```
 v x.x.x
-
-Names of edited files and details in short
-Functionality of the new commit
-Results Of the commit
+-----NewLine----
+Features
+1.Functionality of the new commit
+2.another Funcionality
+3.------
+4.----
+-----NewLine----
+Details 
+1.changes while usage due to the above fuctionality
+2.another anchnges
+3.----
+4.---
 ``` 
 
 ### Versioning
@@ -58,4 +67,5 @@ We use [SemVer](http://semver.org/) for versioning
 
 * **Omkar Chalke** - *Initial work* 
 
+#### Latest Version v 0.2.0
 
