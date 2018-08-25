@@ -1,3 +1,5 @@
+## [Download](https://github.com/omkarjc27/NaturalLanguageCoder/archive/master.zip)
+
 #### Latest Version v 0.2.4
 
 ### Installing
