@@ -139,12 +139,11 @@ class AutocompleteEntry(Entry):
 		global listboxUp_b
 		if listboxUp_b == True:
 			self.var.set(self.listbox.get(ACTIVE))
-			#self.parentbutton.text = self.listbox.get(ACTIVE)
+			self.icursor(self.listbox.get(ACTIVE).find('\'')+1)
 			self.listbox.destroy()
 			self.listboxUp = False
 			listboxUp_b = False
-			self.icursor(END)
-
+			
 	def moveUp(self, event):
 		global listboxUp_b
 		if listboxUp_b == True:
@@ -311,7 +310,7 @@ def pythonize(line):
 			revarl = []
 			aline = line.split("=")
 			if len(aline) == 2:	
-				vline = aline[0]
+				vline = str(aline[0])+"="
 				tline = aline[1]
 			elif len(aline) == 1:
 				vline=""
@@ -342,7 +341,7 @@ def pythonize(line):
 						for var in varl:
 							if var in snip:
 								snip = snip.replace(var,revarl[varl.index(var)])
-						return(str(vline)+"="+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
+						return(str(vline)+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
 
 def depythonize(line):
 	if line != None:
@@ -510,29 +509,29 @@ root.config(menu=menu)
 # Project MENU CASCADE
 promenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
 menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
+#promenu.add_separator()
+#promenu.add_command(label="  World",font=Font2)
+#promenu.add_command(label="  Modules",font=Font2)
+#promenu.add_command(label="  Languages",font=Font2)
 promenu.add_separator()
-promenu.add_command(label="  World",font=Font2)
-promenu.add_command(label="  Modules",font=Font2)
-promenu.add_command(label="  Languages",font=Font2)
-promenu.add_separator()
-promenu.add_command(label="  New Project",font=Font2)
+#promenu.add_command(label="  New Project",font=Font2)
 promenu.add_command(label="  Open Project", command=lambda:open_command(0),font=Font2)
 promenu.add_command(label="  Save Project", command=save_command,font=Font2)
-promenu.add_separator()
-promenu.add_command(label="  UI Themes",font=Font2)
-promenu.add_command(label="  Color Schemes",font=Font2)
-promenu.add_command(label="  Fonts",font=Font2)
-promenu.add_separator()
-promenu.add_command(label="  Settings",font=Font2)
-promenu.add_command(label="  Prefrences",font=Font2)
-promenu.add_separator()
-promenu.add_command(label="  Credits",font=Font2)
-promenu.add_command(label="  Forum",font=Font2)
-promenu.add_command(label="  Contact",font=Font2)
-promenu.add_command(label="  License",font=Font2)
-promenu.add_command(label="  About",font=Font2)
-promenu.add_separator()
-promenu.add_command(label=" Extract Complete Data ", command=add_data,font=Font2)
+#promenu.add_separator()
+#promenu.add_command(label="  UI Themes",font=Font2)
+#promenu.add_command(label="  Color Schemes",font=Font2)
+#promenu.add_command(label="  Fonts",font=Font2)
+#promenu.add_separator()
+#promenu.add_command(label="  Settings",font=Font2)
+#promenu.add_command(label="  Prefrences",font=Font2)
+#promenu.add_separator()
+#promenu.add_command(label="  Credits",font=Font2)
+#promenu.add_command(label="  Forum",font=Font2)
+#promenu.add_command(label="  Contact",font=Font2)
+#promenu.add_command(label="  License",font=Font2)
+#promenu.add_command(label="  About",font=Font2)
+#promenu.add_separator()
+#promenu.add_command(label=" Extract Complete Data ", command=add_data,font=Font2)
 promenu.add_separator()
 promenu.add_command(label=" Exit ", command=exit_command,font=Font2)
 

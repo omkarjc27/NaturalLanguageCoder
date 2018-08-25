@@ -1,4 +1,5 @@
 # Natural Language Coder
+#### Latest Version v 0.2.1
 
 ### Installing
 
@@ -57,6 +58,9 @@ Details
 2.another anchnges
 3.----
 4.---
+-----NewLine----
+Bug Fixes
+1.----(If any)
 ``` 
 
 ### Versioning
@@ -67,5 +71,4 @@ We use [SemVer](http://semver.org/) for versioning
 
 * **Omkar Chalke** - *Initial work* 
 
-#### Latest Version v 0.2.0
 
