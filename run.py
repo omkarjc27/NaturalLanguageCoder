@@ -9,10 +9,10 @@ import re
 import readline
 import tkFont
 import ast
-
+import os
 snippet = []
 intent = []
-
+dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
 root = Tkinter.Tk()
 #root.overrideredirect(True)
 width = root.winfo_screenwidth()
@@ -59,6 +59,8 @@ button_list = []
 er_pyf = ""
 op_fil = ""
 listboxUp_b = False
+
+
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -372,8 +374,10 @@ def open_command(n):
 	if n == 0:
 		file = tkFileDialog.askopenfile(parent=root,mode='rb',title='Select a file to Open')
 	else :
-		file = open(readin("cache_nlc"),"r")	
-	term.config(text="Opening"+str(file.name),fg="#333333",anchor=S)
+		if os.path.exists(readin('cache_nlc')):
+			file = open(readin("cache_nlc"),"r")
+		else:
+			file = None		
 	if file != None:
 		root.title(" Natural Language Coder "+current_nlc_version+" - "+file.name)
 		writeout(file.name,"cache_nlc")
@@ -386,8 +390,12 @@ def open_command(n):
 			contents = " "	
 		editor(contents)
 		file.close()
-	term.config(text="",fg="#333333",anchor=S)
-
+	else:
+		tbox.place(x=0,y=0)
+		tbox.config(width=width,height=height-100)
+		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg ='#f2f2f2',foreground='#333333',anchor=W)
+		welc_screen.place(x=0,y=0)	
+	
 def save_command():
 	global button_list
 	global file
@@ -414,7 +422,32 @@ def save_command():
 		file.close()
 	else :
 		print('file=none')	
-		
+
+
+class popupWindow(object):
+	def __init__(self):
+		top=self.top=Toplevel(root)
+		self.l=Label(top,text=" ENTER NAME OF NEW PROJECTS")
+		self.l.pack()
+		self.e=Entry(top)
+		self.e.pack()
+		self.b=Button(top,text='Ok',command=self.cleanup)
+		self.top.bind("<Return>",lambda event:self.cleanup())					
+		self.b.pack()
+	def cleanup(self):
+		self.value=self.e.get()
+		if " " in self.value:
+			self.value = self.value.replace(" ","_")
+		self.top.destroy()
+		global file
+		file = open(dire+self.value+".py","w+")
+		writeout(dire+self.value+".py",'cache_nlc')
+		open_command(1)
+
+
+def new_command():
+	nwind = popupWindow()
+
 def exit_command():
 	if tkMessageBox.askokcancel("Quit", "Do you really want to quit?"):
 		root.destroy()
@@ -512,9 +545,8 @@ menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
 #promenu.add_separator()
 #promenu.add_command(label="  World",font=Font2)
 #promenu.add_command(label="  Modules",font=Font2)
-#promenu.add_command(label="  Languages",font=Font2)
 promenu.add_separator()
-#promenu.add_command(label="  New Project",font=Font2)
+promenu.add_command(label="  New Project",font=Font2,command=new_command)
 promenu.add_command(label="  Open Project", command=lambda:open_command(0),font=Font2)
 promenu.add_command(label="  Save Project", command=save_command,font=Font2)
 #promenu.add_separator()
