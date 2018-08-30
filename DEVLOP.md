@@ -32,29 +32,6 @@ python run.py
 * [Conala-Corpus](www.conala-corpus.com) - The Dataset used
 * [PyFlakes]()- Used For Testing
 
-## Contributing
-
-### Code Of Conduct
-
-Commit Format 
-```
-v x.x.x
------NewLine----
-Features
-1.Functionality of the new commit
-2.another Funcionality
-3.------
-4.----
------NewLine----
-Details 
-1.changes while usage due to the above fuctionality
-2.another anchnges
-3.----
-4.---
------NewLine----
-Bug Fixes
-1.----(If any)
-``` 
 
 ### Versioning
 

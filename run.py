@@ -10,6 +10,10 @@ import readline
 import tkFont
 import ast
 import os
+import ntpath
+import webbrowser
+
+
 snippet = []
 intent = []
 dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
@@ -92,7 +96,6 @@ class AutocompleteEntry(Entry):
 		if self.var == '':
 			self.var = self["textvariable"] = StringVar()
 		self.var.trace('w', self.changed)
-		self.bind("<Right>", self.selection)
 		self.bind("<Up>", self.moveUp)
 		self.bind("<Down>", self.moveDown)
 		self.bind("<Return>", lambda event:self.moveDown(event,ent=True))
@@ -369,25 +372,40 @@ def writeout(data,file): 															#write to a text file
 	result = file.write(data)
 	file.close()
 
+def open_button(selection,t):
+	writeout(dire+selection+".py","cache_nlc")
+	open_command(1)
+	t.destroy()
+
 def open_command(n):
 	global file
 	if n == 0:
-		file = tkFileDialog.askopenfile(parent=root,mode='rb',title='Select a file to Open')
+		t = Toplevel(root)
+		projs = os.listdir(dire)
+		l =	Listbox(t,width=10, height=len(projs),font=Font2)
+		l.title=("Chose a Project")
+		for p in projs:
+			p = p.replace(".py","")
+			l.insert(END,p)
+		l.pack()
+		b = Button(t,text="Open",font=Font2,command=lambda:open_button(l.get(ACTIVE),t))						
+		b.pack()
 	else :
 		if os.path.exists(readin('cache_nlc')):
 			file = open(readin("cache_nlc"),"r")
 		else:
 			file = None		
 	if file != None:
-		root.title(" Natural Language Coder "+current_nlc_version+" - "+file.name)
+		root.title(" Natural Language Coder "+current_nlc_version+" - "+ntpath.basename(file.name).replace(".py",""))
 		writeout(file.name,"cache_nlc")
 		globals()["tbox"] = tbox
 		fileopened = True
 		contents = readin(file.name)
-		if "nobutton" in globals():
-			nobutton.destroy()
+		if "welc_screen" in globals():
+			welc_screen.destroy()
 		if contents=="":
-			contents = " "	
+			tn = ntpath.basename(file.name).replace(".py","") 
+			contents = "# NLC PROJECT --- \" "+tn+" \""	
 		editor(contents)
 		file.close()
 	else:
@@ -475,6 +493,8 @@ def editor(content):
 			line = depythonize(line)
 		line = line.replace("\t", "____")
 		bid = linebutton(line,i)
+		if i == 0:
+			bid.lineclick()
 		globals()["line"+str(i)]=bid
 		i+=1 
 	if 'welc_screen'in globals():
@@ -509,6 +529,14 @@ def runfile():
 	else:
 		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=S)
 
+def browser(utype):
+	if utype == "cre":
+		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
+	elif utype == "lic":
+		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)		
+	elif utype == "dev":
+		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/DEVLOP.html",new=1)		
+	 
 
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
 
@@ -542,28 +570,20 @@ root.config(menu=menu)
 # Project MENU CASCADE
 promenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
 menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
-#promenu.add_separator()
-#promenu.add_command(label="  World",font=Font2)
-#promenu.add_command(label="  Modules",font=Font2)
+promenu.add_command(label="  World",font=Font2)
+promenu.add_command(label="  Modules",font=Font2)
 promenu.add_separator()
-promenu.add_command(label="  New Project",font=Font2,command=new_command)
+promenu.add_command(label="  New Project                 ",font=Font2,command=new_command)
 promenu.add_command(label="  Open Project", command=lambda:open_command(0),font=Font2)
 promenu.add_command(label="  Save Project", command=save_command,font=Font2)
 #promenu.add_separator()
 #promenu.add_command(label="  UI Themes",font=Font2)
 #promenu.add_command(label="  Color Schemes",font=Font2)
 #promenu.add_command(label="  Fonts",font=Font2)
-#promenu.add_separator()
-#promenu.add_command(label="  Settings",font=Font2)
-#promenu.add_command(label="  Prefrences",font=Font2)
-#promenu.add_separator()
-#promenu.add_command(label="  Credits",font=Font2)
-#promenu.add_command(label="  Forum",font=Font2)
-#promenu.add_command(label="  Contact",font=Font2)
-#promenu.add_command(label="  License",font=Font2)
-#promenu.add_command(label="  About",font=Font2)
-#promenu.add_separator()
-#promenu.add_command(label=" Extract Complete Data ", command=add_data,font=Font2)
+promenu.add_separator()
+promenu.add_command(label="  Credits",font=Font2,command=lambda:browser("cre"))
+promenu.add_command(label="  License",font=Font2,command=lambda:browser("lic"))
+promenu.add_command(label="  Development",font=Font2,command=lambda:browser("dev"))
 promenu.add_separator()
 promenu.add_command(label=" Exit ", command=exit_command,font=Font2)
 
