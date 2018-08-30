@@ -1,6 +1,9 @@
 
 ![Logo](https://github.com/omkarjc27/NaturalLanguageCoder/blob/master/logo.png)
 
+## NLC
+### Natural Language Coding tool for high-end and low-end projects for bot beginner and expert coders 
+ 
 ## Table of Contents
 * [Quick Start](#quick-start)
 * [Download And Installation](#download-and-installation)
