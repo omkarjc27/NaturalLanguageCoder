@@ -1,9 +1,10 @@
 
-![Logo](https://github.com/omkarjc27/NaturalLanguageCoder/blob/master/logo.png)
+<p align="center">
+<img src="https://drive.google.com/file/d/1lbMc9RycBccoHM5fOI1SbqiQePgsUn5u/view?usp=sharing" alt="logo" width=72 height=72>
+<h3 align="center">NLC</h3>
+Natural Language Coding tool for high-end and low-end projects for bot beginner and expert coders 
+</p>
 
-## NLC
-### Natural Language Coding tool for high-end and low-end projects for bot beginner and expert coders 
- 
 ## Table of Contents
 * [Quick Start](#quick-start)
 * [Download And Installation](#download-and-installation)
