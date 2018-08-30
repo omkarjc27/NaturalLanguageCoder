@@ -1,7 +1,6 @@
 
+<h1 align="center">NLC</h1>
 <p align="center">
-<img src="https://drive.google.com/file/d/1lbMc9RycBccoHM5fOI1SbqiQePgsUn5u/view?usp=sharing" alt="logo" width=72 height=72>
-<h3 align="center">NLC</h3>
 Natural Language Coding tool for high-end and low-end projects for bot beginner and expert coders 
 </p>
 
