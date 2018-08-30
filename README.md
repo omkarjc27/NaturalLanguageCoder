@@ -1,5 +1,5 @@
 
-![Logo](https://drive.google.com/file/d/1lbMc9RycBccoHM5fOI1SbqiQePgsUn5u/view?usp=sharing)
+![Logo](https://github.com/omkarjc27/NaturalLanguageCoder/blob/master/logo.png)
 
 ## Table of Contents
 * [Quick Start](#quick-start)
