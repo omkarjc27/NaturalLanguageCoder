@@ -12,12 +12,11 @@ import ast
 import os
 import ntpath
 import webbrowser
-
-
+root = Tkinter.Tk()
 snippet = []
 intent = []
 dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
-root = Tkinter.Tk()
+data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
 #root.overrideredirect(True)
 width = root.winfo_screenwidth()
 height = root.winfo_screenheight()
@@ -26,14 +25,16 @@ height = root.winfo_screenheight()
 #text_1 = canvas.create_text(width*0.5/2, (height*0.5/2)-50,fill='red',font="Times 100 bold" ,text="N L C")
 #text_2 = canvas.create_text(width*0.5/2, (height*0.5/2)+40,fill='pink',font="Times 20 bold" ,text="STARTING NLC")
 #canvas.pack()
-def initiate():
+def initiate(file):
 	global snippet
 	global intent
+	print(file)
 	#canvas.itemconfigure(text_2, text="INITIATING SYSTEM")
-	with open('nlc_data.json', 'rb') as f:
+	with open("nlc_data/"+file+".json", 'rb') as f:
+		print(f)
 		for item in json.load(f):
 			snippet.append(item['snippet'])
-			intent.append(item['rewritten_intent'])		
+			intent.append(item['intent'])		
 	#		canvas.itemconfigure(text_2, text="Acessing DATABASE :"+str(len(snippet)*100/(500*33))+"%")
 	#with open('conala-corpus/conala-train.json', 'rb') as f:
 	#	for item in json.load(f):
@@ -48,13 +49,34 @@ def initiate():
 #root.after(1000,initiate)
 #root.after(2000, root.destroy)
 #root.mainloop()
-initiate()
+#initiate("nlc_default")
 root.destroy()
-#						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
+color1 = color2 = color3 =None
 
+def theme_selection(theme):
+	global color1,color2,color3
+	if theme == 'light':
+		color1 = '#f2f2f2'
+		color2 = '#333333'
+		color3 = '#d9d9d9'
+	elif theme == 'default':
+		color1='#d3d3d3'
+		color2='#041441'
+		color3='#d0d0d0'
+	elif theme == 'old_school':
+		color1='#d3d3d3'
+		color2='#527a7a'
+		color3='#d0d0d0'
+	
+#						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 current_nlc_version = "(v0.2)"
 root = Tkinter.Tk(className=" Natural Language Coder - "+current_nlc_version)
-tbox = Tkinter.Canvas(root,bg='#f2f2f2')
+#				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
+Font1 = tkFont.Font(family='Noto Sans',size=20)
+Font2 = tkFont.Font(family='Noto Sans',size=10)
+Font3 = tkFont.Font(family='Noto Mono',size=16)
+theme_selection('default')
+tbox = Tkinter.Canvas(root,bg=color1)
 file = None
 fileopened = False
 root.geometry('%dx%d+%d+%d' % (width, height, width, height-100))
@@ -63,6 +85,9 @@ button_list = []
 er_pyf = ""
 op_fil = ""
 listboxUp_b = False
+
+cache_line_arr = []
+cache_text_arr = []
 
 
 class AutocompleteEntry(Entry):
@@ -96,16 +121,24 @@ class AutocompleteEntry(Entry):
 		if self.var == '':
 			self.var = self["textvariable"] = StringVar()
 		self.var.trace('w', self.changed)
-		self.bind("<Up>", self.moveUp)
+		self.bind("<Up>", lambda event:self.moveUp())
 		self.bind("<Down>", self.moveDown)
 		self.bind("<Return>", lambda event:self.moveDown(event,ent=True))
 		self.bind("<Control-s>",lambda event:save_command())
 		self.bind("<Control-r>",lambda event:runfile())
+		self.bind("<Control-z>",lambda event:editor_undo())
 		self.bind("<Tab>",lambda event:self.add_short(event,"\t"))
 		self.bind("<parenleft>",lambda event:self.add_short(event,"()"))
 		self.bind('<quotedbl>',lambda event:self.add_short(event,"\"\""))
 		self.bind("<quoteright>",lambda event:self.add_short(event,"\'\'"))
-		
+		self.bind("<BackSpace>", self.do_backspace)
+	
+	def do_backspace(self,event):
+		if self.get() == "":
+			self.moveUp()
+
+
+
 	def changed(self, name, index, mode):
 		global listboxUp_b
 		if self.var.get() == '':
@@ -149,7 +182,7 @@ class AutocompleteEntry(Entry):
 			self.listboxUp = False
 			listboxUp_b = False
 			
-	def moveUp(self, event):
+	def moveUp(self):
 		global listboxUp_b
 		if listboxUp_b == True:
 			if self.listbox.curselection() == ():
@@ -228,8 +261,8 @@ class AutocompleteEntry(Entry):
 class linebutton():
 	def __init__(self,line,i):
 		colort,font = self.find_color(line)
-		self.id = Tkinter.Button(tbox,text=line,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground='#f2f2f2',activeforeground=colort)
-		self.wind = tbox.create_window(0,i*28,width=width-302,height=28,window=self.id,anchor=NW)
+		self.id = Tkinter.Button(tbox,text=line,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground=color1,activeforeground=colort,background=color3)
+		self.wind = tbox.create_window(0,i*28,width=width-315,height=28,window=self.id,anchor=NW)
 		self.row = i
 		self.text = line
 		global button_list
@@ -242,9 +275,12 @@ class linebutton():
 
 	def lineclick(self):
 		self.sugg = AutocompleteEntry(intent,self, tbox)
-		self.sugg.config({"background": "#f2f2f2","fg": "#000000"},bd=0,selectborderwidth=0,font=Font2)
+		self.sugg.config({"background": color1,"fg":color2 },bd=0,selectborderwidth=0,font=Font2)
 		global current_line
 		if current_line != False:
+			if current_line.text != current_line.sugg.get():
+				current_line.t_changed()
+
 			current_line.text = current_line.sugg.get() 
 			current_line.sugg.destroy()
 			current_line.declare()	
@@ -255,11 +291,16 @@ class linebutton():
 		current_row.config(text="Editing Line "+str(self.row))
 		button_list.remove(self)
 
+	def t_changed(self):
+		global cache_text_arr
+		global cache_line_arr	
+		cache_line_arr.append(self.row)
+		cache_text_arr.append(self.text)
 		
 	def declare(self):
 		colort,font = self.find_color(self.text)
-		self.id = Tkinter.Button(tbox,text=self.text,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground='#f2f2f2',activeforeground=colort)
-		self.wind = tbox.create_window(0,self.row*28,width=width-302,height=28,window=self.id,anchor=NW)
+		self.id = Tkinter.Button(tbox,text=self.text,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground=color1,activeforeground=colort,background=color3)
+		self.wind = tbox.create_window(0,self.row*28,width=width-315,height=28,window=self.id,anchor=NW)
 		global button_list
 		button_list.append(self)
 
@@ -309,44 +350,54 @@ def pythonize(line):
 	z = Concatenate elements of a list 'y' of multiple integers to a single integer
 	print(z)
 	'''
-	for inten in intent:
-		if inten != None:
-			varl = []
-			revarl = []
-			aline = line.split("=")
-			if len(aline) == 2:	
-				vline = str(aline[0])+"="
-				tline = aline[1]
-			elif len(aline) == 1:
-				vline=""
-				tline=aline[0]
-			splits = inten.split("\'")
-			i = 0
-			j = 1
-			nline = line
-			if len(aline)==2 or len(aline)==1:
-				for split in splits:
-					if i%2 == 0:
-						if split not in tline:
-							j=0	
-					else:
-						if j!=0:
-							varl.append(split)
-					i+=1
-				if j == 1:
-					resultant_intent = inten
-					i=0
-					splits = tline.split('\'')
+	if "import nlc data " in line:
+		i_data = line.replace("import nlc data ","")
+		im_arr = i_data.split(",")
+		im_line = "#import nlc data "
+		for im in im_array:
+			initiate(im)
+			im_line += im+", "
+		return(im_line)	
+
+	else:	 
+		for inten in intent:
+			if inten != None:
+				varl = []
+				revarl = []
+				aline = line.split("=")
+				if len(aline) == 2:	
+					vline = str(aline[0])+"="
+					tline = aline[1]
+				elif len(aline) == 1:
+					vline=""
+					tline=aline[0]
+				splits = inten.split("\'")
+				i = 0
+				j = 1
+				nline = line
+				if len(aline)==2 or len(aline)==1:
 					for split in splits:
-						if i%2 ==1:
-							revarl.append(split)
+						if i%2 == 0:
+							if split not in tline:
+								j=0	
+						else:
+							if j!=0:
+								varl.append(split)
 						i+=1
-					snip=str(snippet[intent.index(inten)])
-					if snip != None:
-						for var in varl:
-							if var in snip:
-								snip = snip.replace(var,revarl[varl.index(var)])
-						return(str(vline)+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
+					if j == 1:
+						resultant_intent = inten
+						i=0
+						splits = tline.split('\'')
+						for split in splits:
+							if i%2 ==1:
+								revarl.append(split)
+							i+=1
+						snip=str(snippet[intent.index(inten)])
+						if snip != None:
+							for var in varl:
+								if var in snip:
+									snip = snip.replace(var,revarl[varl.index(var)])
+							return(str(vline)+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
 
 def depythonize(line):
 	if line != None:
@@ -360,6 +411,15 @@ def depythonize(line):
 			for var in varl:
 				inten = inten.replace(var,revarl[varl.index(var)])
 			return(inten)	
+		elif "#import nlc data " in line:
+			i_data = line.replace("#import nlc data ","")
+			im_arr = i_data.split(",")
+			im_line = "import nlc data "
+			for im in im_array:
+				initiate(im)
+				im_line += im+", "
+			return(im_line)
+
 
 def readin(rfile):#read a text file
 	file = open(rfile,"r")
@@ -372,46 +432,50 @@ def writeout(data,file): 															#write to a text file
 	result = file.write(data)
 	file.close()
 
+def editor_undo():
+	if len(cache_line_arr)>1:	
+		line_nox = cache_line_arr[-1]
+		for line in button_list:
+			if line.row == line_nox:
+				line.text = cache_text_arr[-1]
+				line.id.configure(text=line.text)
+		del cache_text_arr[-1]
+		del cache_line_arr[-1]		
+
+
 def open_button(selection,t):
 	writeout(dire+selection+".py","cache_nlc")
 	open_command(1)
 	t.destroy()
-
 def open_command(n):
 	global file
-	if n == 0:
-		t = Toplevel(root)
-		projs = os.listdir(dire)
-		l =	Listbox(t,width=10, height=len(projs),font=Font2)
-		l.title=("Chose a Project")
-		for p in projs:
-			p = p.replace(".py","")
-			l.insert(END,p)
-		l.pack()
-		b = Button(t,text="Open",font=Font2,command=lambda:open_button(l.get(ACTIVE),t))						
-		b.pack()
-	else :
+	if n != 0:
+		
 		if os.path.exists(readin('cache_nlc')):
 			file = open(readin("cache_nlc"),"r")
+			
 		else:
 			file = None		
 	if file != None:
 		root.title(" Natural Language Coder "+current_nlc_version+" - "+ntpath.basename(file.name).replace(".py",""))
 		writeout(file.name,"cache_nlc")
 		globals()["tbox"] = tbox
+		for button in button_list:
+			button.id.destroy()
+		del button_list[:]	
 		fileopened = True
 		contents = readin(file.name)
 		if "welc_screen" in globals():
+			global welc_screen
 			welc_screen.destroy()
 		if contents=="":
-			tn = ntpath.basename(file.name).replace(".py","") 
-			contents = "# NLC PROJECT --- \" "+tn+" \""	
+			contents = "# write code here"
 		editor(contents)
 		file.close()
 	else:
 		tbox.place(x=0,y=0)
 		tbox.config(width=width,height=height-100)
-		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg ='#f2f2f2',foreground='#333333',anchor=W)
+		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
 		welc_screen.place(x=0,y=0)	
 	
 def save_command():
@@ -506,11 +570,12 @@ def editor(content):
 	tbox.bind("<Control-r>",lambda event:runfile())
 	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
-	vbar.config(command=tbox.yview,bg ='#333333',activebackground='#333333',bd=0)
-	vbar.place(x=(width)-20,y=0,height=150,width=15)
+	vbar.config(command=tbox.yview,bg =color2,activebackground=color2,bd=0)
+	vbar.place(x=(width)-315,y=2,height=height*0.865,width=13)
 	tbox.place(x=0,y=0)
 	tbox.config(scrollregion=(0,0,0,28*i))
 	tbox.config(yscrollcommand=vbar.set)
+	
 
 def add_data():
 	with open('conala-corpus/conala-mined.jsonl', 'rb') as f:
@@ -536,80 +601,82 @@ def browser(utype):
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)		
 	elif utype == "dev":
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/DEVLOP.html",new=1)		
-	 
 
-#				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
+class open_menu_button():
+	def __init__(self,p):
+		self.p = p
+		self.dname = p.replace(".py","")
+		openmenu.add_command(label="        "+self.dname+"        ",command=lambda:self.openfrommenu(str(self.p)))
+	def openfrommenu(self,filen):
+		writeout(dire+filen,"cache_nlc")
+		open_command(1)	
 
-Font1 = tkFont.Font(family='Noto Sans ',size=20)
-Font2 = tkFont.Font(family='Noto Sans ',size=10)
-Font3 = tkFont.Font(family='Noto Mono ',size=16)
 
 #	C 	O 	D 	E 		M 	E 	N 	U
-save=Button(root,text="Save",font=Font2,bg ='#333333',foreground='#d9d9d9',command=save_command)		
-run=Button(root,text="Run",font=Font2,bg ='#333333',foreground='#d9d9d9',command=runfile)
-save.place(x=width-80,y=30,width=60,height=30)
-run.place(x=width-80,y=60,width=60,height=30)
-term = Label(root,text="",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#f2f2f2',foreground='#333333',anchor=S)
-current_row = Label(root,text="Not Editing",font=Font2,bg ='#f2f2f2',foreground='#333333',anchor=W)
-current_row.place(x=width-300,y=2,width=280,height=30)
-term.place(x=width-300,y=150,width=300,height=518)
+term = Label(root,text="Terminal",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#252525',foreground='#c1c1c1',anchor=N)
+current_row = Label(root,text="Not Editing",font=Font2,bg ='#252525',foreground='#c1c1c1',anchor=W)
+current_row.place(x=width-300,y=2,width=300,height=30)
+term.place(x=width-300,y=34,width=300,height=height*0.865)
 
 if readin("cache_nlc") == '':
 	tbox.place(x=0,y=0)
 	tbox.config(width=width,height=height-100)
-	welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg ='#f2f2f2',foreground='#333333',anchor=W)
+	welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
 	welc_screen.place(x=0,y=0)
 else :
 	open_command(1)
-	
+
+
 #			M 	E 	N 	U
-
-
-menu = Menu(root ,bg ='#333333',foreground='#d9d9d9')
+menu = Menu(root ,bg =color2,foreground=color3)
 root.config(menu=menu)
 # Project MENU CASCADE
-promenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
+promenu = Menu(menu,bg =color2,foreground=color3)
 menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
-promenu.add_command(label="  World",font=Font2)
-promenu.add_command(label="  Modules",font=Font2)
+promenu.add_command(label="    World",font=Font2)
+promenu.add_command(label="    Modules",font=Font2)
+thememenu = Menu(promenu,bg=color2,fg=color3)
+thememenu.add_command(label="    Default    ",font=Font2,command=lambda:theme_selection('default'))
+thememenu.add_command(label="    Light    ",font=Font2,command=lambda:theme_selection('light'))
+thememenu.add_command(label="    Old School    ",font=Font2,command=lambda:browser('old_school'))
+promenu.add_cascade(label="    Themes",menu=thememenu,font=Font2)
 promenu.add_separator()
-promenu.add_command(label="  New Project                 ",font=Font2,command=new_command)
-promenu.add_command(label="  Open Project", command=lambda:open_command(0),font=Font2)
-promenu.add_command(label="  Save Project", command=save_command,font=Font2)
-#promenu.add_separator()
+promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
+projs = os.listdir(dire)
+openmenu = Menu(menu,bg=color2,fg=color3)	
+for p in projs:
+	open_menu_button(p)
+	
+promenu.add_cascade(label="    Open Project",menu=openmenu,font=Font2)
+promenu.add_separator()
+promenu.add_command(label="    Save Project    (Ctrl+S)", command=save_command,font=Font2)
+promenu.add_command(label="    Run Project     (Ctrl+R)", command=runfile,font=Font2)
+promenu.add_separator()
+promenu.add_command(label="    Undo                (Ctrl+Z)", command=editor_undo,font=Font2)
 #promenu.add_command(label="  UI Themes",font=Font2)
 #promenu.add_command(label="  Color Schemes",font=Font2)
 #promenu.add_command(label="  Fonts",font=Font2)
 promenu.add_separator()
-promenu.add_command(label="  Credits",font=Font2,command=lambda:browser("cre"))
-promenu.add_command(label="  License",font=Font2,command=lambda:browser("lic"))
-promenu.add_command(label="  Development",font=Font2,command=lambda:browser("dev"))
+promenu.add_command(label="    Credits",font=Font2,command=lambda:browser("cre"))
+promenu.add_command(label="    License",font=Font2,command=lambda:browser("lic"))
+promenu.add_command(label="    Development",font=Font2,command=lambda:browser("dev"))
 promenu.add_separator()
-promenu.add_command(label=" Exit ", command=exit_command,font=Font2)
-
+promenu.add_command(label="    Exit ", command=exit_command,font=Font2)
 '''
 # cloud 
-cloudmenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
+cloudmenu = Menu(menu,bg =color2,foreground=color3)
 menu.add_cascade(label="Cloud", menu=cloudmenu ,font=Font2)
 cloudmenu.add_command(label=" My Cloud", command=dummy,font=Font2)
 cloudmenu.add_command(label=" Upload to Cloud", command=dummy,font=Font2)
 cloudmenu.add_command(label=" World Cloud", command=dummy,font=Font2)
 # WORLDMENU 
-worldmenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
+worldmenu = Menu(menu,bg =color2,foreground=color3)
 menu.add_cascade(label="World", menu=worldmenu ,font=Font2)
 worldmenu.add_command(label=" Browse Projects  ", command=dummy,font=Font2)
 worldmenu.add_command(label=" Browse Modules", command=dummy,font=Font2)
 worldmenu.add_command(label=" Forum/Help", command=doc_command ,font=Font2)
 worldmenu.add_command(label=" Documentation", command=doc_command ,font=Font2)
 worldmenu.add_command(label=" Skins", command=dummy,font=Font2)
-#EDIT
-editmenu = Menu(menu,bg ='#333333',foreground='#d9d9d9')
-menu.add_cascade(label="Edit", menu=editmenu ,font=Font2)
-editmenu.add_command(label="Undo		", command=dummy,font=Font2)
-editmenu.add_command(label="Redo", command=dummy,font=Font2)
-editmenu.add_command(label="Cut", command=dummy,font=Font2)
-editmenu.add_command(label="Copy", command=dummy,font=Font2)
-editmenu.add_command(label="Paste", command=dummy,font=Font2)
 # general
 menu.add_command(label="Find", command=dummy,font=Font2)
 menu.add_command(label="Settings", command=dummy,font=Font2)
