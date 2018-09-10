@@ -31,7 +31,7 @@ def initiate(file):
 	global snippet
 	global intent
 	for line in readin(data_dire+file).splitlines():
-		item = line.split('$$#$$')	
+		item = line.split('##$$##')	
 		snippet.append(item[1])
 		intent.append(item[0])		
 color1 = color2 = color3 =None
