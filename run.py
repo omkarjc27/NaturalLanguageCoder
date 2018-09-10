@@ -12,70 +12,71 @@ import ast
 import os
 import ntpath
 import webbrowser
-root = Tkinter.Tk()
+
+
+def readin(rfile):
+	file = open(rfile,"r")
+	result = file.read()
+	file.close()
+	return(result)
+def writeout(data,file):
+	file = open(file,"w")
+	result = file.write(data)
+	file.close()
 snippet = []
 intent = []
 dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
 data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
-#root.overrideredirect(True)
-width = root.winfo_screenwidth()
-height = root.winfo_screenheight()
-#root.geometry('%dx%d+%d+%d' % (width*0.5, height*0.5, width*0.25, height*0.25))
-#canvas = Tkinter.Canvas(root, height=height*0.5, width=width*0.5, bg="black")
-#text_1 = canvas.create_text(width*0.5/2, (height*0.5/2)-50,fill='red',font="Times 100 bold" ,text="N L C")
-#text_2 = canvas.create_text(width*0.5/2, (height*0.5/2)+40,fill='pink',font="Times 20 bold" ,text="STARTING NLC")
-#canvas.pack()
 def initiate(file):
 	global snippet
 	global intent
-	print(file)
-	#canvas.itemconfigure(text_2, text="INITIATING SYSTEM")
-	with open("nlc_data/"+file+".json", 'rb') as f:
-		print(f)
-		for item in json.load(f):
-			snippet.append(item['snippet'])
-			intent.append(item['intent'])		
-	#		canvas.itemconfigure(text_2, text="Acessing DATABASE :"+str(len(snippet)*100/(500*33))+"%")
-	#with open('conala-corpus/conala-train.json', 'rb') as f:
-	#	for item in json.load(f):
-	#		snippet.append(item['snippet'])
-	#		intent.append(item['intent'])		
-	#		canvas.itemconfigure(text_2, text="Acessing DATABASE :"+str(len(snippet)*100/(2879*33))+"%")
-	
-			
-	
-	#canvas.itemconfigure(text_2, text="Completed")
-
-#root.after(1000,initiate)
-#root.after(2000, root.destroy)
-#root.mainloop()
-#initiate("nlc_default")
-root.destroy()
+	for line in readin(data_dire+file).splitlines():
+		item = line.split('$$#$$')	
+		snippet.append(item[1])
+		intent.append(item[0])		
 color1 = color2 = color3 =None
-
+#initiate('def_data')
 def theme_selection(theme):
 	global color1,color2,color3
 	if theme == 'light':
+		color1 = '#f2f2f2'
+		color2 = '#ffffff'
+		color3 = '#d9d9d9'
+	elif theme == 'dark':
 		color1 = '#f2f2f2'
 		color2 = '#333333'
 		color3 = '#d9d9d9'
 	elif theme == 'default':
 		color1='#d3d3d3'
-		color2='#041441'
+		color2='#00685a'
 		color3='#d0d0d0'
 	elif theme == 'old_school':
 		color1='#d3d3d3'
 		color2='#527a7a'
 		color3='#d0d0d0'
+	else:
+		color1='#d3d3d3'
+		color2='#00685a'
+		color3='#d0d0d0'
+		theme = 'default'
 	
+	writeout(theme,'nlc_data/theme_nlc')	
+
+if readin('nlc_data/theme_nlc')=='':
+	theme_selection('default')
+else :
+	theme_selection(readin('nlc_data/theme_nlc'))
+
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 current_nlc_version = "(v0.2)"
 root = Tkinter.Tk(className=" Natural Language Coder - "+current_nlc_version)
+width = root.winfo_screenwidth()
+height = root.winfo_screenheight()
+
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
 Font1 = tkFont.Font(family='Noto Sans',size=20)
 Font2 = tkFont.Font(family='Noto Sans',size=10)
 Font3 = tkFont.Font(family='Noto Mono',size=16)
-theme_selection('default')
 tbox = Tkinter.Canvas(root,bg=color1)
 file = None
 fileopened = False
@@ -85,6 +86,7 @@ button_list = []
 er_pyf = ""
 op_fil = ""
 listboxUp_b = False
+#root.tk.call('wm', 'iconphoto', root._w, PhotoImage(file='nlc_data/icon.png'))
 
 cache_line_arr = []
 cache_text_arr = []
@@ -134,11 +136,9 @@ class AutocompleteEntry(Entry):
 		self.bind("<BackSpace>", self.do_backspace)
 	
 	def do_backspace(self,event):
+		
 		if self.get() == "":
 			self.moveUp()
-
-
-
 	def changed(self, name, index, mode):
 		global listboxUp_b
 		if self.var.get() == '':
@@ -206,7 +206,6 @@ class AutocompleteEntry(Entry):
 				if line.row == new_edit_row:
 					line.lineclick()
 			tbox.focus_set()
-			#tbox.yview_scroll(1, "pages")
 				
 			
 	def moveDown(self, event,ent=False):
@@ -267,7 +266,6 @@ class linebutton():
 		self.text = line
 		global button_list
 		button_list.append(self)
-		#self.id.place(y=i*28,width=width*0.7)
 		
 	def set_text(self,sugg,text):
 		sugg.delete(0,END)
@@ -341,15 +339,6 @@ class linebutton():
 		return color,font	
 
 def pythonize(line):
-	# x = concatenate 'x' of integers
-	# z = Concatenate elements of a list 'y' of multiple integers to a single integer
-	#"Concatenate elements of a list 'x' of multiple integers to a single integer"
-	#"sum(d * 10 ** i for i, d in enumerate(x[::-1]))",
-	'''
-	y =  range(10)
-	z = Concatenate elements of a list 'y' of multiple integers to a single integer
-	print(z)
-	'''
 	if "import nlc data " in line:
 		i_data = line.replace("import nlc data ","")
 		im_arr = i_data.split(",")
@@ -421,17 +410,6 @@ def depythonize(line):
 			return(im_line)
 
 
-def readin(rfile):#read a text file
-	file = open(rfile,"r")
-	result = file.read()
-	file.close()
-	return(result)
-
-def writeout(data,file): 															#write to a text file
-	file = open(file,"w")
-	result = file.write(data)
-	file.close()
-
 def editor_undo():
 	if len(cache_line_arr)>1:	
 		line_nox = cache_line_arr[-1]
@@ -444,21 +422,21 @@ def editor_undo():
 
 
 def open_button(selection,t):
-	writeout(dire+selection+".py","cache_nlc")
+	writeout(dire+selection+".py","nlc_data/cache_nlc")
 	open_command(1)
 	t.destroy()
 def open_command(n):
 	global file
 	if n != 0:
 		
-		if os.path.exists(readin('cache_nlc')):
-			file = open(readin("cache_nlc"),"r")
+		if os.path.exists(readin('nlc_data/cache_nlc')):
+			file = open(readin("nlc_data/cache_nlc"),"r")
 			
 		else:
 			file = None		
 	if file != None:
 		root.title(" Natural Language Coder "+current_nlc_version+" - "+ntpath.basename(file.name).replace(".py",""))
-		writeout(file.name,"cache_nlc")
+		writeout(file.name,"nlc_data/cache_nlc")
 		globals()["tbox"] = tbox
 		for button in button_list:
 			button.id.destroy()
@@ -492,7 +470,7 @@ def save_command():
 		for i in range(0,len(button_list)):
 			for k in range(0,len(button_list)):
 				if i == button_list[k].row:
-					oline = button_list[k].text.replace("____","\t")
+					oline = button_list[k].text.replace("----|","\t")
 					line = pythonize(oline)
 					if line != None: 
 						data.append(line)
@@ -523,7 +501,7 @@ class popupWindow(object):
 		self.top.destroy()
 		global file
 		file = open(dire+self.value+".py","w+")
-		writeout(dire+self.value+".py",'cache_nlc')
+		writeout(dire+self.value+".py",'nlc_data/cache_nlc')
 		open_command(1)
 
 
@@ -555,7 +533,7 @@ def editor(content):
 		tes = depythonize(line)
 		if tes != None:
 			line = depythonize(line)
-		line = line.replace("\t", "____")
+		line = line.replace("\t", "----|")
 		bid = linebutton(line,i)
 		if i == 0:
 			bid.lineclick()
@@ -570,7 +548,7 @@ def editor(content):
 	tbox.bind("<Control-r>",lambda event:runfile())
 	tbox.config(width=width,height=height-100)
 	vbar=Scrollbar(root,orient=VERTICAL)
-	vbar.config(command=tbox.yview,bg =color2,activebackground=color2,bd=0)
+	vbar.config(command=tbox.yview,bg ='#181717',activebackground='#181717',bd=0)
 	vbar.place(x=(width)-315,y=2,height=height*0.865,width=13)
 	tbox.place(x=0,y=0)
 	tbox.config(scrollregion=(0,0,0,28*i))
@@ -601,14 +579,19 @@ def browser(utype):
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)		
 	elif utype == "dev":
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/DEVLOP.html",new=1)		
+	elif utype == "docs":
+		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
+	elif utype == "for":
+		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
 
+	
 class open_menu_button():
 	def __init__(self,p):
 		self.p = p
 		self.dname = p.replace(".py","")
 		openmenu.add_command(label="        "+self.dname+"        ",command=lambda:self.openfrommenu(str(self.p)))
 	def openfrommenu(self,filen):
-		writeout(dire+filen,"cache_nlc")
+		writeout(dire+filen,"nlc_data/cache_nlc")
 		open_command(1)	
 
 
@@ -618,7 +601,7 @@ current_row = Label(root,text="Not Editing",font=Font2,bg ='#252525',foreground=
 current_row.place(x=width-300,y=2,width=300,height=30)
 term.place(x=width-300,y=34,width=300,height=height*0.865)
 
-if readin("cache_nlc") == '':
+if readin("nlc_data/cache_nlc") == '':
 	tbox.place(x=0,y=0)
 	tbox.config(width=width,height=height-100)
 	welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
@@ -630,7 +613,6 @@ else :
 #			M 	E 	N 	U
 menu = Menu(root ,bg =color2,foreground=color3)
 root.config(menu=menu)
-# Project MENU CASCADE
 promenu = Menu(menu,bg =color2,foreground=color3)
 menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
 promenu.add_command(label="    World",font=Font2)
@@ -639,6 +621,7 @@ thememenu = Menu(promenu,bg=color2,fg=color3)
 thememenu.add_command(label="    Default    ",font=Font2,command=lambda:theme_selection('default'))
 thememenu.add_command(label="    Light    ",font=Font2,command=lambda:theme_selection('light'))
 thememenu.add_command(label="    Old School    ",font=Font2,command=lambda:browser('old_school'))
+thememenu.add_command(label="    Dark    ",font=Font2,command=lambda:browser('dark'))
 promenu.add_cascade(label="    Themes",menu=thememenu,font=Font2)
 promenu.add_separator()
 promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
@@ -653,32 +636,13 @@ promenu.add_command(label="    Save Project    (Ctrl+S)", command=save_command,f
 promenu.add_command(label="    Run Project     (Ctrl+R)", command=runfile,font=Font2)
 promenu.add_separator()
 promenu.add_command(label="    Undo                (Ctrl+Z)", command=editor_undo,font=Font2)
-#promenu.add_command(label="  UI Themes",font=Font2)
-#promenu.add_command(label="  Color Schemes",font=Font2)
-#promenu.add_command(label="  Fonts",font=Font2)
 promenu.add_separator()
 promenu.add_command(label="    Credits",font=Font2,command=lambda:browser("cre"))
 promenu.add_command(label="    License",font=Font2,command=lambda:browser("lic"))
 promenu.add_command(label="    Development",font=Font2,command=lambda:browser("dev"))
 promenu.add_separator()
+promenu.add_command(label="    Forum/Help", command=lambda:browser("for") ,font=Font2)
+promenu.add_command(label="    Documentations", command=lambda:browser("docs") ,font=Font2)
+promenu.add_separator()
 promenu.add_command(label="    Exit ", command=exit_command,font=Font2)
-'''
-# cloud 
-cloudmenu = Menu(menu,bg =color2,foreground=color3)
-menu.add_cascade(label="Cloud", menu=cloudmenu ,font=Font2)
-cloudmenu.add_command(label=" My Cloud", command=dummy,font=Font2)
-cloudmenu.add_command(label=" Upload to Cloud", command=dummy,font=Font2)
-cloudmenu.add_command(label=" World Cloud", command=dummy,font=Font2)
-# WORLDMENU 
-worldmenu = Menu(menu,bg =color2,foreground=color3)
-menu.add_cascade(label="World", menu=worldmenu ,font=Font2)
-worldmenu.add_command(label=" Browse Projects  ", command=dummy,font=Font2)
-worldmenu.add_command(label=" Browse Modules", command=dummy,font=Font2)
-worldmenu.add_command(label=" Forum/Help", command=doc_command ,font=Font2)
-worldmenu.add_command(label=" Documentation", command=doc_command ,font=Font2)
-worldmenu.add_command(label=" Skins", command=dummy,font=Font2)
-# general
-menu.add_command(label="Find", command=dummy,font=Font2)
-menu.add_command(label="Settings", command=dummy,font=Font2)
-'''
 root.mainloop()

@@ -1,7 +1,7 @@
 
 <h1 align="center">NLC</h1>
 <p align="center">
-Natural Language Coding tool for high-end and low-end projects for bot beginner and expert coders 
+Natural Language Coding tool for high-end and low-end projects for both beginners and expert coders 
 </p>
 
 ## Table of Contents
