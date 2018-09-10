@@ -30,12 +30,17 @@ data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
 def initiate(file):
 	global snippet
 	global intent
-	for line in readin(data_dire+file).splitlines():
+	i=0
+	m_arr = readin(data_dire+file).split('@##@@')
+	del m_arr[-1] 
+	for line in m_arr:
+		print(i)
 		item = line.split('##$$##')	
 		snippet.append(item[1])
 		intent.append(item[0])		
+		i+=1
 color1 = color2 = color3 =None
-#initiate('def_data')
+initiate('def_data')
 def theme_selection(theme):
 	global color1,color2,color3
 	if theme == 'light':
