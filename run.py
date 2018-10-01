@@ -9,15 +9,25 @@ import ast
 import os
 import ntpath
 import webbrowser
+
+
+# readin and writeout are as name says
+
 def readin(rfile):
 	file = open(rfile,"r")
 	result = file.read()
 	file.close()
 	return(result)
+
 def writeout(data,file):
 	file = open(file,"w")
 	result = file.write(data)
 	file.close()
+
+
+
+# initiates the database
+
 def initiate(file):
 	global snippet
 	global intent
@@ -29,6 +39,11 @@ def initiate(file):
 		snippet.append(item[1])
 		intent.append(item[0])		
 		i+=1	
+
+
+
+# the entry with the suggestion box
+
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -37,6 +52,7 @@ class AutocompleteEntry(Entry):
 			self.listboxLength = kwargs['listboxLength']
 			del kwargs['listboxLength']
 		else:
+
 			self.listboxLength = 20
 		self.parentbutton = line_button	
 		# Custom matches function
@@ -50,19 +66,16 @@ class AutocompleteEntry(Entry):
 				return re.match(pattern, acListEntry)
 				
 			self.matchesFunction = matches
-		
 		Entry.__init__(self, *args, **kwargs)
 		self.focus()
-
 		self.autocompleteList = autocompleteList
-		
 		self.var = self["textvariable"]
 		if self.var == '':
 			self.var = self["textvariable"] = StringVar()
 		self.var.trace('w', self.changed)
 		self.bind("<Up>", lambda event:self.moveUp())
 		self.bind("<Down>", self.moveDown)
-		self.bind("<Return>", lambda event:self.moveDown(event,ent=True))
+		self.bind("<Return>", lambda event:self.do_enter(event))
 		self.bind("<Control-s>",lambda event:save_command())
 		self.bind("<Control-r>",lambda event:runfile())
 		self.bind("<Control-z>",lambda event:editor_undo())
@@ -72,13 +85,11 @@ class AutocompleteEntry(Entry):
 		self.bind("<quoteright>",lambda event:self.add_short(event,"\'\'"))
 		self.bind("<BackSpace>", self.do_backspace)
 		self.bind("<Right>", self.close_lb)
-
 	def changed(self, name, index, mode):
 		global listboxUp_b
 		if self.var.get() == '':
 			if listboxUp_b == True:
 				self.listbox.destroy()
-				self.listboxUp = False
 				listboxUp_b = False
 		else:
 			words = self.comparison()
@@ -95,7 +106,6 @@ class AutocompleteEntry(Entry):
 					self.listbox.bind("<quoteright>",lambda event:self.add_short(event,"\'\'"))
 					self.listbox.place(x=0, y=(self.line_button.row+1)*28)
 					self.listbox.config(font=Font2)
-					self.listboxUp = True
 					listboxUp_b = True
 				
 				self.listbox.delete(0, END)
@@ -104,16 +114,12 @@ class AutocompleteEntry(Entry):
 			else:
 				if listboxUp_b == True:
 					self.listbox.destroy()
-					self.listboxUp = False
 					listboxUp_b = False
-	
 	def close_lb(self,event):
 		global listboxUp_b
 		if listboxUp_b == True:
 			self.listbox.destroy()
-			self.listboxUp = False
 			listboxUp_b = False
-
 	def selection(self, event):
 		global listboxUp_b
 		if listboxUp_b == True:
@@ -121,8 +127,7 @@ class AutocompleteEntry(Entry):
 			self.icursor(self.listbox.get(ACTIVE).find('\'')+1)
 			self.listbox.destroy()
 			self.listboxUp = False
-			listboxUp_b = False
-			
+			listboxUp_b = False		
 	def moveUp(self):
 		global listboxUp_b
 		if listboxUp_b == True:
@@ -146,9 +151,7 @@ class AutocompleteEntry(Entry):
 			for line in button_list:
 				if line.row == new_edit_row:
 					line.lineclick()
-			tbox.focus_set()
-				
-			
+			tbox.focus_set()			
 	def moveDown(self, event,ent=False):
 
 		global listboxUp_b
@@ -180,13 +183,12 @@ class AutocompleteEntry(Entry):
 			if got_line != True:
 				new_line = linebutton("",new_edit_row)
 				new_line.lineclick()
-			tbox.focus_set()
-				
+			tbox.focus_set()			
 	def comparison(self):
 		pattern =  self.var.get()
 		matches = []
 		for w in self.autocompleteList:
-			if w!= None and len(pattern)>=3 and pattern in w.decode('utf-8').strip() :
+			if w== None and len(pattern)>=3 and pattern in w.decode('utf-8').strip() :
 				matches.append(w.decode('utf-8').strip())
 		return matches
 	def add_short(self,event,text):
@@ -196,11 +198,11 @@ class AutocompleteEntry(Entry):
 			if text == '\"\"' or text == '\'\'' or text== '()':
 				self.icursor(t+1)
 			return 'break'	
-	
 	def do_backspace(self,event):
 		
 		if  self.index(INSERT)== 0 :
 			global listboxUp_b
+			c_position = 0
 			if listboxUp_b == True:
 				self.listbox.destroy()
 				self.listboxUp = False
@@ -213,21 +215,65 @@ class AutocompleteEntry(Entry):
 					c_position = len(line.text)
 					line.lineclick()
 					line.set_text(line.sugg,line.text+txt2add)
-					line.sugg.icursor(c_position)
+					new_line = line
 			new_selection = self.line_button.row+1
 			old_selection = self.line_button
-			for line in button_list:
-				if line.row == new_selection:
-					old_selection.lineclick()
-					old_selection.set_text(old_selection.sugg,line.text)
-					old_selection = line	
-					new_selection+=1
+			for x in xrange(len(button_list)):
+				for line in button_list:
+					if line.row == new_selection:
+						old_selection.lineclick()
+						old_selection.set_text(old_selection.sugg,line.text)
+						old_selection = line	
+						new_selection+=1
 			for line in button_list:		
 				if line.row == len(button_list):
 					line.lineclick()
 					line.set_text(line.sugg,'')
+			
+			if listboxUp_b == True:
+				self.listbox.destroy()
+				self.listboxUp = False
+				listboxUp_b = False
 						
 			self.moveUp()		
+			new_line.sugg.icursor(c_position)			
+
+	def do_enter(self,event):
+		global listboxUp_b
+		c_position = 0
+		if listboxUp_b == True:
+			self.listbox.destroy()
+			self.listboxUp = False
+			listboxUp_b = False
+		new_selection = self.line_button.row+1
+		f_txt = self.var.get()[self.index(INSERT):]
+		self.delete(self.index(INSERT),END)
+
+		for x in xrange(len(button_list)-self.line_button.row):
+			for line in button_list:
+				if line.row == new_selection:
+					line.lineclick()
+					line.set_text(line.sugg,f_txt)
+					new_selection+=1
+					f_txt = line.text 
+
+		
+		linebutton(f_txt,len(button_list)+1)
+		
+		for line in button_list:
+			if line.row == self.line_button.row+1:
+				line.lineclick()
+				line.sugg.icursor(0)
+		if listboxUp_b == True:
+			self.listbox.destroy()
+			self.listboxUp = False
+			listboxUp_b = False
+		
+					
+
+
+# line and its functions
+
 class linebutton():
 	def __init__(self,line,i):
 		colort,font = self.find_color(line)
@@ -238,12 +284,10 @@ class linebutton():
 		self.no.place(x=2,y=(self.row*28)+2,width=18,height=28)
 		self.wind = tbox.create_window(20,(i*28)+2,width=width-345,height=28,window=self.id,anchor=NW)
 		global button_list
-		button_list.append(self)
-		
+		button_list.append(self)	
 	def set_text(self,sugg,text):
 		sugg.delete(0,END)
 		sugg.insert(0,text)
-
 	def lineclick(self):
 		self.sugg = AutocompleteEntry(intent,self, tbox)
 		self.sugg.config({"background": color1 },bd=0,selectborderwidth=0,font=Font2,width=10)
@@ -261,13 +305,11 @@ class linebutton():
 		global current_row
 		current_row.config(text="Editing Line "+str(self.row))
 		button_list.remove(self)
-
 	def t_changed(self):
 		global cache_text_arr
 		global cache_line_arr	
 		cache_line_arr.append(self.row)
 		cache_text_arr.append(self.text)
-		
 	def declare(self):
 		colort,font = self.find_color(self.text)
 		self.id = Tkinter.Button(tbox,text=self.text,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground=color1,activeforeground=colort,background=color3)
@@ -276,7 +318,6 @@ class linebutton():
 		self.no.place(x=2,y=(self.row*28)+2,width=18,height=28)
 		global button_list
 		button_list.append(self)
-
 	def find_color(self,line):
 		#009933=green=import
 		#002080=blue=defining classes.functions
@@ -312,6 +353,11 @@ class linebutton():
 			color = "#002080"
 			font = tkFont.Font(family='Times Bold',size=14)	
 		return color,font	
+
+
+
+# pythonize and depythonize used to convert nlc data to python code and vice-versa
+
 def pythonize(line):
 	if "import nlc data " in line:
 		i_data = line.replace("import nlc data ","")
@@ -361,6 +407,7 @@ def pythonize(line):
 								if var in snip:
 									snip = snip.replace(var,revarl[varl.index(var)])
 							return(str(vline)+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
+
 def depythonize(line):
 	if line != None:
 		if '#nlc_d_$_' in line:
@@ -381,6 +428,11 @@ def depythonize(line):
 				initiate(im)
 				im_line += im+", "
 			return(im_line)
+
+
+
+# ctrl-Z as usual
+
 def editor_undo():
 	if len(cache_line_arr)>1:	
 		line_nox = cache_line_arr[-1]
@@ -390,10 +442,16 @@ def editor_undo():
 				line.id.configure(text=line.text)
 		del cache_text_arr[-1]
 		del cache_line_arr[-1]		
+
+
+
+# open,open new file and save file commands
+
 def open_button(selection,t):
 	writeout(dire+selection+".py","nlc_data/cache_nlc")
 	open_command(1)
 	t.destroy()
+
 def open_command(n):
 	global file
 	if n != 0:
@@ -424,6 +482,18 @@ def open_command(n):
 		tbox.config(width=width,height=height-100)
 		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
 		welc_screen.place(x=0,y=0)	
+
+class open_menu_button():
+	def __init__(self):
+		self.projs = os.listdir(dire)
+		for p in self.projs:
+			self.p = p
+			self.dname = p.replace(".py","")
+			openmenu.add_command(label="        "+self.dname+"        ",command=lambda:self.openfrommenu(str(self.p)))
+	def openfrommenu(self,filen):
+		writeout(dire+filen,"nlc_data/cache_nlc")
+		open_command(1)	
+
 def save_command():
 	global button_list
 	global file
@@ -450,6 +520,7 @@ def save_command():
 		file.close()
 	else :
 		print('file=none')	
+
 class popupWindow(object):
 	def __init__(self):
 		top=self.top=Toplevel(root)
@@ -469,15 +540,34 @@ class popupWindow(object):
 		file = open(dire+self.value+".py","w+")
 		writeout(dire+self.value+".py",'nlc_data/cache_nlc')
 		open_command(1)
+
 def new_command():
+	# now redundant
 	nwind = popupWindow()
+
+
+
+#exit the gui
 def exit_command():
 	if tkMessageBox.askokcancel("Quit", "Do you really want to quit?"):
 		root.destroy()
+
+
+
+# documentations
+
 def about_command():
+	#leads to about webpage
 	label = tkMessageBox.showinfo("About", "For Help Go to : link")
+
 def doc_command():
 	label = tkMessageBox.showinfo("About", "For Documentations Go to : link")
+	#filler
+
+
+
+#main declaration of editor
+
 def editor(content):
 	lines = content.splitlines()
 	i = 0
@@ -497,7 +587,6 @@ def editor(content):
 		bid = linebutton(line,i)
 		if i == 0:
 			bid.lineclick()
-		globals()["line"+str(i)]=bid
 		i+=1 
 	if 'welc_screen'in globals():
 		welc_screen.destroy()	
@@ -513,12 +602,22 @@ def editor(content):
 	tbox.config(yscrollcommand=vbar.set)
 	west_line = Tkinter.Label(tbox,text="",bg=color2)
 	west_line.place(x=2,y=2,width=18,height=height)
+
+
+
+# add more data to db
+
 def add_data():
 	with open('conala-corpus/conala-mined.jsonl', 'rb') as f:
 		
 		for item in jsonlines.Reader(f):
 			snippet.append(item['snippet'])
 			intent.append(item['intent'])		
+
+
+
+# execute code
+
 def runfile():
 	#pyflakes text.py
 	p = subprocess.Popen("pyflakes test.py", stdout=subprocess.PIPE, shell=True)
@@ -529,6 +628,11 @@ def runfile():
 	 	term.config(text="Output:\n"+str(output),fg="#009933",anchor=S)
 	else:
 		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=S)
+
+
+
+# browses to webpage
+
 def browser(utype):
 	if utype == "cre":
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
@@ -540,16 +644,11 @@ def browser(utype):
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
 	elif utype == "for":
 		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
-class open_menu_button():
-	def __init__(self):
-		self.projs = os.listdir(dire)
-		for p in self.projs:
-			self.p = p
-			self.dname = p.replace(".py","")
-			openmenu.add_command(label="        "+self.dname+"        ",command=lambda:self.openfrommenu(str(self.p)))
-	def openfrommenu(self,filen):
-		writeout(dire+filen,"nlc_data/cache_nlc")
-		open_command(1)	
+
+
+
+
+
 snippet = []
 intent = []
 dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
@@ -558,11 +657,15 @@ color1='#d3d3d3'
 color2='#006b85'
 color3='#d0d0d0'
 initiate('def_data')
+
+
 #						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
 current_nlc_version = "(v0.2)"
 root = Tkinter.Tk(className="")
 width = root.winfo_screenwidth()
 height = root.winfo_screenheight()
+
+
 #				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
 Font1 = tkFont.Font(family='Noto Sans',size=20)
 Font2 = tkFont.Font(family='Noto Sans',size=10)
@@ -579,11 +682,15 @@ listboxUp_b = False
 #root.tk.call('wm', 'iconphoto', root._w, PhotoImage(file='nlc_data/icon.png'))
 cache_line_arr = []
 cache_text_arr = []
+
+
 #	C 	O 	D 	E 		M 	E 	N 	U
 term = Label(root,text="Terminal",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#252525',foreground='#c1c1c1',anchor=N)
 current_row = Label(root,text="Not Editing",font=Font2,bg ='#252525',foreground='#c1c1c1',anchor=W)
 current_row.place(x=width-300,y=2,width=300,height=30)
 term.place(x=width-300,y=34,width=300,height=height*0.865)
+
+
 if readin("nlc_data/cache_nlc") == '':
 	tbox.place(x=0,y=0)
 	tbox.config(width=width,height=height-100)
