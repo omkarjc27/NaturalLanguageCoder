@@ -10,24 +10,17 @@ import os
 import ntpath
 import webbrowser
 
-
 # readin and writeout are as name says
-
 def readin(rfile):
 	file = open(rfile,"r")
 	result = file.read()
 	file.close()
 	return(result)
-
 def writeout(data,file):
 	file = open(file,"w")
 	result = file.write(data)
 	file.close()
-
-
-
 # initiates the database
-
 def initiate(file):
 	global snippet
 	global intent
@@ -39,11 +32,7 @@ def initiate(file):
 		snippet.append(item[1])
 		intent.append(item[0])		
 		i+=1	
-
-
-
 # the entry with the suggestion box
-
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
@@ -74,7 +63,7 @@ class AutocompleteEntry(Entry):
 			self.var = self["textvariable"] = StringVar()
 		self.var.trace('w', self.changed)
 		self.bind("<Up>", lambda event:self.moveUp())
-		self.bind("<Down>", self.moveDown)
+		self.bind("<Down>",lambda event:self.moveDown())
 		self.bind("<Return>", lambda event:self.do_enter(event))
 		self.bind("<Control-s>",lambda event:save_command())
 		self.bind("<Control-r>",lambda event:runfile())
@@ -86,9 +75,11 @@ class AutocompleteEntry(Entry):
 		self.bind("<BackSpace>", self.do_backspace)
 		self.bind("<Right>", self.close_lb)
 	def changed(self, name, index, mode):
+		self.line_button.t_changed(self.var.get())
 		global listboxUp_b
+		global st_sliding
 		if self.var.get() == '':
-			if listboxUp_b == True:
+			if listboxUp_b == True and st_sliding == False:
 				self.listbox.destroy()
 				listboxUp_b = False
 		else:
@@ -112,7 +103,7 @@ class AutocompleteEntry(Entry):
 				for w in words:
 					self.listbox.insert(END,w)
 			else:
-				if listboxUp_b == True:
+				if listboxUp_b == True and st_sliding == False:
 					self.listbox.destroy()
 					listboxUp_b = False
 	def close_lb(self,event):
@@ -152,7 +143,7 @@ class AutocompleteEntry(Entry):
 				if line.row == new_edit_row:
 					line.lineclick()
 			tbox.focus_set()			
-	def moveDown(self, event,ent=False):
+	def moveDown(self,ent=False):
 
 		global listboxUp_b
 		if listboxUp_b == True and ent == False:
@@ -185,12 +176,14 @@ class AutocompleteEntry(Entry):
 				new_line.lineclick()
 			tbox.focus_set()			
 	def comparison(self):
+		global st_sliding
 		pattern =  self.var.get()
 		matches = []
 		for w in self.autocompleteList:
-			if w== None and len(pattern)>=3 and pattern in w.decode('utf-8').strip() :
-				matches.append(w.decode('utf-8').strip())
-		return matches
+			if w != None and pattern in w.decode('utf-8').strip() :
+				if st_sliding == False:
+					matches.append(w.decode('utf-8').strip())
+					return matches
 	def add_short(self,event,text):
 		if listboxUp_b != True:
 			t = self.index(INSERT)
@@ -202,6 +195,8 @@ class AutocompleteEntry(Entry):
 		
 		if  self.index(INSERT)== 0 :
 			global listboxUp_b
+			global st_sliding 
+			st_sliding = True
 			c_position = 0
 			if listboxUp_b == True:
 				self.listbox.destroy()
@@ -209,7 +204,8 @@ class AutocompleteEntry(Entry):
 				listboxUp_b = False
 			new_selection = self.line_button.row-1
 			txt2add = self.get()
-			self.delete(0,END)			
+			self.delete(0,END)	
+			new_line = None		
 			for line in button_list:
 				if line.row == new_selection:
 					c_position = len(line.text)
@@ -234,12 +230,12 @@ class AutocompleteEntry(Entry):
 				self.listbox.destroy()
 				self.listboxUp = False
 				listboxUp_b = False
-						
-			self.moveUp()		
+			st_sliding = False			
+			new_line.lineclick()
 			new_line.sugg.icursor(c_position)			
-
 	def do_enter(self,event):
 		global listboxUp_b
+		global st_sliding
 		c_position = 0
 		if listboxUp_b == True:
 			self.listbox.destroy()
@@ -248,7 +244,7 @@ class AutocompleteEntry(Entry):
 		new_selection = self.line_button.row+1
 		f_txt = self.var.get()[self.index(INSERT):]
 		self.delete(self.index(INSERT),END)
-
+		st_sliding = True
 		for x in xrange(len(button_list)-self.line_button.row):
 			for line in button_list:
 				if line.row == new_selection:
@@ -256,10 +252,9 @@ class AutocompleteEntry(Entry):
 					line.set_text(line.sugg,f_txt)
 					new_selection+=1
 					f_txt = line.text 
-
+					
 		
 		linebutton(f_txt,len(button_list)+1)
-		
 		for line in button_list:
 			if line.row == self.line_button.row+1:
 				line.lineclick()
@@ -269,11 +264,8 @@ class AutocompleteEntry(Entry):
 			self.listboxUp = False
 			listboxUp_b = False
 		
-					
-
-
+		st_sliding = False	
 # line and its functions
-
 class linebutton():
 	def __init__(self,line,i):
 		colort,font = self.find_color(line)
@@ -293,9 +285,6 @@ class linebutton():
 		self.sugg.config({"background": color1 },bd=0,selectborderwidth=0,font=Font2,width=10)
 		global current_line
 		if current_line != False:
-			if current_line.text != current_line.sugg.get():
-				current_line.t_changed()
-
 			current_line.text = current_line.sugg.get() 
 			current_line.sugg.destroy()
 			current_line.declare()	
@@ -305,11 +294,11 @@ class linebutton():
 		global current_row
 		current_row.config(text="Editing Line "+str(self.row))
 		button_list.remove(self)
-	def t_changed(self):
+	def t_changed(self,new_text):
 		global cache_text_arr
-		global cache_line_arr	
+		global cache_line_arr
 		cache_line_arr.append(self.row)
-		cache_text_arr.append(self.text)
+		cache_text_arr.append(new_text)
 	def declare(self):
 		colort,font = self.find_color(self.text)
 		self.id = Tkinter.Button(tbox,text=self.text,font=font,highlightthickness=0,anchor="w",command=lambda:self.lineclick(),width=width,relief = FLAT,fg=colort,bg="#f2f2f2",activebackground=color1,activeforeground=colort,background=color3)
@@ -353,11 +342,7 @@ class linebutton():
 			color = "#002080"
 			font = tkFont.Font(family='Times Bold',size=14)	
 		return color,font	
-
-
-
 # pythonize and depythonize used to convert nlc data to python code and vice-versa
-
 def pythonize(line):
 	if "import nlc data " in line:
 		i_data = line.replace("import nlc data ","")
@@ -407,7 +392,6 @@ def pythonize(line):
 								if var in snip:
 									snip = snip.replace(var,revarl[varl.index(var)])
 							return(str(vline)+str(snip)+"\t#nlc_d_$_"+str(intent.index(inten))+"_$_"+str(varl)+"_$_"+str(revarl)) 	
-
 def depythonize(line):
 	if line != None:
 		if '#nlc_d_$_' in line:
@@ -428,30 +412,24 @@ def depythonize(line):
 				initiate(im)
 				im_line += im+", "
 			return(im_line)
-
-
-
 # ctrl-Z as usual
-
 def editor_undo():
-	if len(cache_line_arr)>1:	
+	global cache_line_arr
+	global cache_text_arr
+	if len(cache_line_arr)>1:
 		line_nox = cache_line_arr[-1]
 		for line in button_list:
 			if line.row == line_nox:
+				print(len(cache_text_arr))
 				line.text = cache_text_arr[-1]
-				line.id.configure(text=line.text)
+				line.id.configure(text=cache_text_arr[-1])
 		del cache_text_arr[-1]
 		del cache_line_arr[-1]		
-
-
-
 # open,open new file and save file commands
-
 def open_button(selection,t):
 	writeout(dire+selection+".py","nlc_data/cache_nlc")
 	open_command(1)
 	t.destroy()
-
 def open_command(n):
 	global file
 	if n != 0:
@@ -482,7 +460,6 @@ def open_command(n):
 		tbox.config(width=width,height=height-100)
 		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
 		welc_screen.place(x=0,y=0)	
-
 class open_menu_button():
 	def __init__(self):
 		self.projs = os.listdir(dire)
@@ -493,7 +470,6 @@ class open_menu_button():
 	def openfrommenu(self,filen):
 		writeout(dire+filen,"nlc_data/cache_nlc")
 		open_command(1)	
-
 def save_command():
 	global button_list
 	global file
@@ -520,7 +496,6 @@ def save_command():
 		file.close()
 	else :
 		print('file=none')	
-
 class popupWindow(object):
 	def __init__(self):
 		top=self.top=Toplevel(root)
@@ -540,34 +515,21 @@ class popupWindow(object):
 		file = open(dire+self.value+".py","w+")
 		writeout(dire+self.value+".py",'nlc_data/cache_nlc')
 		open_command(1)
-
 def new_command():
 	# now redundant
 	nwind = popupWindow()
-
-
-
 #exit the gui
 def exit_command():
 	if tkMessageBox.askokcancel("Quit", "Do you really want to quit?"):
 		root.destroy()
-
-
-
 # documentations
-
 def about_command():
 	#leads to about webpage
 	label = tkMessageBox.showinfo("About", "For Help Go to : link")
-
 def doc_command():
 	label = tkMessageBox.showinfo("About", "For Documentations Go to : link")
 	#filler
-
-
-
 #main declaration of editor
-
 def editor(content):
 	lines = content.splitlines()
 	i = 0
@@ -602,37 +564,25 @@ def editor(content):
 	tbox.config(yscrollcommand=vbar.set)
 	west_line = Tkinter.Label(tbox,text="",bg=color2)
 	west_line.place(x=2,y=2,width=18,height=height)
-
-
-
 # add more data to db
-
 def add_data():
 	with open('conala-corpus/conala-mined.jsonl', 'rb') as f:
 		
 		for item in jsonlines.Reader(f):
 			snippet.append(item['snippet'])
 			intent.append(item['intent'])		
-
-
-
 # execute code
-
 def runfile():
 	#pyflakes text.py
-	p = subprocess.Popen("pyflakes test.py", stdout=subprocess.PIPE, shell=True)
+	p = subprocess.Popen("pyflakes "+readin('nlc_data/cache_nlc'), stdout=subprocess.PIPE, shell=True)
  	(output, err) = p.communicate()
 	if output == "":
-		p = subprocess.Popen("python test.py", stdout=subprocess.PIPE, shell=True)
+		p = subprocess.Popen("python "+readin('nlc_data/cache_nlc'), stdout=subprocess.PIPE, shell=True)
 	 	(output, err) = p.communicate()
-	 	term.config(text="Output:\n"+str(output),fg="#009933",anchor=S)
+	 	term.config(text="Output:\n"+str(output),fg="#009933",anchor=NW)
 	else:
-		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=S)
-
-
-
+		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=NW)
 # browses to webpage
-
 def browser(utype):
 	if utype == "cre":
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
@@ -644,80 +594,72 @@ def browser(utype):
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
 	elif utype == "for":
 		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
+#MAIN CODE 
+if __name__ =="__main__":
+	snippet = []
+	intent = []
+	dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
+	data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
+	color1='#d3d3d3'
+	color2='#006b85'
+	color3='#d0d0d0'
+	initiate('def_data')
+	st_sliding = False
+	#						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
+	current_nlc_version = "(alpha)"
+	root = Tkinter.Tk(className="")
+	width = root.winfo_screenwidth()
+	height = root.winfo_screenheight()
+	#				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
+	Font1 = tkFont.Font(family='Noto Sans',size=20)
+	Font2 = tkFont.Font(family='Noto Sans',size=10)
+	Font3 = tkFont.Font(family='Noto Mono',size=16)
+	tbox = Tkinter.Canvas(root,bg=color1)
+	file = None
+	fileopened = False
+	root.geometry('%dx%d+%d+%d' % (width, height,0,0))
+	current_line = False
+	button_list = []
+	er_pyf = ""
+	op_fil = ""
+	listboxUp_b = False
+	#root.tk.call('wm', 'iconphoto', root._w, PhotoImage(file='nlc_data/icon.png'))
+	cache_line_arr = []
+	cache_text_arr = []
+	#	C 	O 	D 	E 		M 	E 	N 	U
+	term = Label(root,text="Terminal",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#252525',foreground='#c1c1c1',anchor=N)
+	current_row = Label(root,text="Not Editing",font=Font2,bg ='#252525',foreground='#c1c1c1',anchor=W)
+	current_row.place(x=width-300,y=2,width=300,height=30)
+	term.place(x=width-300,y=34,width=300,height=height*0.865)
 
 
-
-
-
-snippet = []
-intent = []
-dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
-data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
-color1='#d3d3d3'
-color2='#006b85'
-color3='#d0d0d0'
-initiate('def_data')
-
-
-#						M 	A 	I 	N 		S 	C 	R 	E 	E 	N
-current_nlc_version = "(v0.2)"
-root = Tkinter.Tk(className="")
-width = root.winfo_screenwidth()
-height = root.winfo_screenheight()
-
-
-#				T 	H 	E 	M 	E 		 V 	A 	R 	I 	A 	B 	L 	E 	S
-Font1 = tkFont.Font(family='Noto Sans',size=20)
-Font2 = tkFont.Font(family='Noto Sans',size=10)
-Font3 = tkFont.Font(family='Noto Mono',size=16)
-tbox = Tkinter.Canvas(root,bg=color1)
-file = None
-fileopened = False
-root.geometry('%dx%d+%d+%d' % (width/2, height,0,0))
-current_line = False
-button_list = []
-er_pyf = ""
-op_fil = ""
-listboxUp_b = False
-#root.tk.call('wm', 'iconphoto', root._w, PhotoImage(file='nlc_data/icon.png'))
-cache_line_arr = []
-cache_text_arr = []
-
-
-#	C 	O 	D 	E 		M 	E 	N 	U
-term = Label(root,text="Terminal",font=tkFont.Font(family='Noto Sans ',size=12),bg ='#252525',foreground='#c1c1c1',anchor=N)
-current_row = Label(root,text="Not Editing",font=Font2,bg ='#252525',foreground='#c1c1c1',anchor=W)
-current_row.place(x=width-300,y=2,width=300,height=30)
-term.place(x=width-300,y=34,width=300,height=height*0.865)
-
-
-if readin("nlc_data/cache_nlc") == '':
-	tbox.place(x=0,y=0)
-	tbox.config(width=width,height=height-100)
-	welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
-	welc_screen.place(x=0,y=0)
-else :
-	open_command(1)
-if __name__ == "__main__":	
-	#			M 	E 	N 	U
-	menu = Menu(root ,bg =color2,foreground=color3)
-	root.config(menu=menu)
-	promenu = Menu(menu,bg =color2,foreground=color3)
-	menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
-	promenu.add_command(label="    World",font=Font2)
-	promenu.add_command(label="    Modules",font=Font2)
-	promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
-	openmenu = Menu(root,bg=color2,fg=color3)	
-	open_menu_button()
-	menu.add_cascade(label="Open",menu=openmenu,font=Font2)
-	menu.add_command(label="Undo", command=editor_undo,font=Font2)
-	menu.add_command(label="Forum/Help", command=lambda:browser("for") ,font=Font2)
-	menu.add_command(label="Documentations", command=lambda:browser("docs") ,font=Font2)
-	menu.add_command(label="Credits",font=Font2,command=lambda:browser("cre"))
-	menu.add_command(label="License",font=Font2,command=lambda:browser("lic"))
-	menu.add_command(label=" "*35+"Natural Language Coder "+current_nlc_version+" "*110)
-	menu.entryconfig(8, state=DISABLED)
-	menu.add_command(label="Save", command=save_command,font=Font2)
-	menu.add_command(label="Run", command=runfile,font=Font2)
-	menu.add_command(label="Exit ", command=exit_command,font=Font2)
-root.mainloop()
+	if readin("nlc_data/cache_nlc") == '':
+		tbox.place(x=0,y=0)
+		tbox.config(width=width,height=height-100)
+		welc_screen = Label(root,text="Welcome To NLC",font=tkFont.Font(family='Noto Sans ',size=20),bg =color1,foreground=color2,anchor=W)
+		welc_screen.place(x=0,y=0)
+	else :
+		open_command(1)
+	if __name__ == "__main__":	
+		#			M 	E 	N 	U
+		menu = Menu(root ,bg =color2,foreground=color3)
+		root.config(menu=menu)
+		promenu = Menu(menu,bg =color2,foreground=color3)
+		menu.add_cascade(label="NLC", menu=promenu ,font=Font2)
+		promenu.add_command(label="    World",font=Font2)
+		promenu.add_command(label="    Modules",font=Font2)
+		promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
+		openmenu = Menu(root,bg=color2,fg=color3)	
+		open_menu_button()
+		menu.add_cascade(label="Open",menu=openmenu,font=Font2)
+		menu.add_command(label="Undo", command=editor_undo,font=Font2)
+		menu.add_command(label="Forum/Help", command=lambda:browser("for") ,font=Font2)
+		menu.add_command(label="Documentations", command=lambda:browser("docs") ,font=Font2)
+		menu.add_command(label="Credits",font=Font2,command=lambda:browser("cre"))
+		menu.add_command(label="License",font=Font2,command=lambda:browser("lic"))
+		menu.add_command(label=" "*35+"Natural Language Coder "+current_nlc_version+" "*110)
+		menu.entryconfig(8, state=DISABLED)
+		menu.add_command(label="Save", command=save_command,font=Font2)
+		menu.add_command(label="Run", command=runfile,font=Font2)
+		menu.add_command(label="Exit ", command=exit_command,font=Font2)
+	root.mainloop()

@@ -4,12 +4,7 @@
 Natural Language Coding tool for high-end and low-end projects for both beginners and expert coders 
 </p>
 
-
-## Quick Start
-
 #### Smart IDE 
-
-
 ## Requirements
 * Currently program Does not have a stand alone installation 
 * Current Version fully supports all Linux OS
