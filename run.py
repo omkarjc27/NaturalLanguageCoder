@@ -1,14 +1,20 @@
+#!/usr/bin/env python
+import sys
+import os
 import subprocess
-import Tkinter
-from Tkinter import *
-import tkMessageBox
+import tkinter as Tkinter
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+import tkinter.messagebox as tkMessageBox
 import re
 import readline
-import tkFont
+import tkinter.font as tkFont
 import ast
-import os
 import ntpath
 import webbrowser
+from os.path import basename
+from html_translator.inference.Sampler import *
 
 # readin and writeout are as name says
 def readin(rfile):
@@ -36,6 +42,7 @@ def initiate(file):
 class AutocompleteEntry(Entry):
 	def __init__(self, autocompleteList,line_button, *args, **kwargs):
 		self.line_button = line_button
+
 		# Listbox length
 		if 'listboxLength' in kwargs:
 			self.listboxLength = kwargs['listboxLength']
@@ -61,6 +68,7 @@ class AutocompleteEntry(Entry):
 		self.var = self["textvariable"]
 		if self.var == '':
 			self.var = self["textvariable"] = StringVar()
+		self.var.set(self.line_button.text)
 		self.var.trace('w', self.changed)
 		self.bind("<Up>", lambda event:self.moveUp())
 		self.bind("<Down>",lambda event:self.moveDown())
@@ -180,9 +188,9 @@ class AutocompleteEntry(Entry):
 		pattern =  self.var.get()
 		matches = []
 		for w in self.autocompleteList:
-			if w != None and pattern in w.decode('utf-8').strip() :
+			if w != None and pattern in w.strip() :
 				if st_sliding == False:
-					matches.append(w.decode('utf-8').strip())
+					matches.append(w.strip())
 					return matches
 	def add_short(self,event,text):
 		if listboxUp_b != True:
@@ -214,7 +222,7 @@ class AutocompleteEntry(Entry):
 					new_line = line
 			new_selection = self.line_button.row+1
 			old_selection = self.line_button
-			for x in xrange(len(button_list)):
+			for x in range(len(button_list)):
 				for line in button_list:
 					if line.row == new_selection:
 						old_selection.lineclick()
@@ -245,7 +253,7 @@ class AutocompleteEntry(Entry):
 		f_txt = self.var.get()[self.index(INSERT):]
 		self.delete(self.index(INSERT),END)
 		st_sliding = True
-		for x in xrange(len(button_list)-self.line_button.row):
+		for x in range(len(button_list)-self.line_button.row):
 			for line in button_list:
 				if line.row == new_selection:
 					line.lineclick()
@@ -277,9 +285,6 @@ class linebutton():
 		self.wind = tbox.create_window(20,(i*28)+2,width=width-345,height=28,window=self.id,anchor=NW)
 		global button_list
 		button_list.append(self)	
-	def set_text(self,sugg,text):
-		sugg.delete(0,END)
-		sugg.insert(0,text)
 	def lineclick(self):
 		self.sugg = AutocompleteEntry(intent,self, tbox)
 		self.sugg.config({"background": color1 },bd=0,selectborderwidth=0,font=Font2,width=10)
@@ -289,7 +294,6 @@ class linebutton():
 			current_line.sugg.destroy()
 			current_line.declare()	
 		tbox.itemconfigure(self.wind, window=self.sugg)
-		self.set_text(self.sugg,self.text)
 		current_line = self
 		global current_row
 		current_row.config(text="Editing Line "+str(self.row))
@@ -311,7 +315,6 @@ class linebutton():
 		#009933=green=import
 		#002080=blue=defining classes.functions
 		#800000=red=loops
-		#
 		color = "#000000"
 		font = tkFont.Font(family='Noto Sans ',size=10)
 		if "import" in line:
@@ -319,7 +322,7 @@ class linebutton():
 			font = tkFont.Font(family='Khmer OS System Bold Italic',size=12)
 		if "def" in line:
  			color = "#002080"
-			font = tkFont.Font(family='Khmer OS System Bold',size=14)
+ 			font = tkFont.Font(family='Khmer OS System Bold',size=14)
 		if "return" in line:
 			color = "#002080"
 			font = tkFont.Font(family='Noto Sans Italic',size=12)
@@ -574,12 +577,11 @@ def add_data():
 # execute code
 def runfile():
 	#pyflakes text.py
-	p = subprocess.Popen("pyflakes "+readin('nlc_data/cache_nlc'), stdout=subprocess.PIPE, shell=True)
- 	(output, err) = p.communicate()
-	if output == "":
+	(output, err) = subprocess.Popen("pyflakes "+readin('nlc_data/cache_nlc'), stdout=subprocess.PIPE, shell=True).communicate()
+	if err == None:
 		p = subprocess.Popen("python "+readin('nlc_data/cache_nlc'), stdout=subprocess.PIPE, shell=True)
-	 	(output, err) = p.communicate()
-	 	term.config(text="Output:\n"+str(output),fg="#009933",anchor=NW)
+		(output, err) = p.communicate()
+		term.config(text="Output:\n"+str(output),fg="#009933",anchor=NW)
 	else:
 		term.config(text="Error:\n"+str(output),fg="#ff0000",anchor=NW)
 # browses to webpage
@@ -594,6 +596,35 @@ def browser(utype):
 		webbrowser.open("https://omkarjc27.github.io/NaturalLanguageCoder/",new=1)
 	elif utype == "for":
 		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
+#html code parser
+def html_main():
+	png_path =  filedialog.askopenfilename(initialdir = "/",
+													title = "Select Image To Convert To HTML",
+													filetypes = (("jpeg files","*.jpg"),("png files","*.png")))
+	print(png_path)
+	if png_path != None:
+		#png_path = #../examples/drawn_example1.png
+		output_folder = './html_translator/generated_html'#./generated_html 
+		model_json_file = './html_translator/bin/model_json.json'#../bin/model_json.json
+		model_weights_file = './html_translator/bin/weights.h5'#../bin/weights.h5
+		style = 'default'
+		print_generated_output = 0
+		print_bleu_score = 0
+		original_gui_filepath = None
+
+		if not os.path.exists(output_folder):
+			os.makedirs(output_folder)
+
+		sampler = Sampler(model_json_path=model_json_file,
+							model_weights_path = model_weights_file)
+		sampler.convert_single_image(output_folder,
+							png_path=png_path,
+							print_generated_output=print_generated_output,
+							get_sentence_bleu=print_bleu_score,
+							original_gui_filepath=original_gui_filepath,
+							style=style)
+		webbrowser.open(output_folder+"/"+ntpath.basename(png_path).replace(".png", ".html"),new=1)
+
 #MAIN CODE 
 if __name__ =="__main__":
 	snippet = []
@@ -649,6 +680,8 @@ if __name__ =="__main__":
 		promenu.add_command(label="    World",font=Font2)
 		promenu.add_command(label="    Modules",font=Font2)
 		promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
+		promenu.add_separator()
+		promenu.add_command(label="    Create HTML",font=Font2,command=html_main)
 		openmenu = Menu(root,bg=color2,fg=color3)	
 		open_menu_button()
 		menu.add_cascade(label="Open",menu=openmenu,font=Font2)

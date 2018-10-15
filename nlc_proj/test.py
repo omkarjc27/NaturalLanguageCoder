@@ -1,8 +1,2 @@
-asdfaf = "a string"
+asdfaf = 'string'
 print(asdfaf)
-
-
-
-
-
-
