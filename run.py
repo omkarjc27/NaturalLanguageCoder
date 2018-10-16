@@ -13,9 +13,7 @@ import tkinter.font as tkFont
 import ast
 import ntpath
 import webbrowser
-from os.path import basename
 from html_translator.inference.Sampler import *
-
 # readin and writeout are as name says
 def readin(rfile):
 	file = open(rfile,"r")
@@ -598,11 +596,13 @@ def browser(utype):
 		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
 #html code parser
 def html_main():
-	png_path =  filedialog.askopenfilename(initialdir = "/",
-													title = "Select Image To Convert To HTML",
-													filetypes = (("jpeg files","*.jpg"),("png files","*.png")))
-	print(png_path)
+	from os.path import basename
+	canvas = Tkinter.Canvas(root, height=height, width=width, bg="black")
+	text_2 = canvas.create_text((width/2)-20, (height/2)-10,fill='pink',font="Times 20 bold" ,text="This may take a while")
+	canvas.pack()
+	png_path =  filedialog.askopenfilename(initialdir = "/",title = "Select Image To Convert To HTML",filetypes = (("jpeg files","*.jpg"),("png files","*.png")))
 	if png_path != None:
+		
 		#png_path = #../examples/drawn_example1.png
 		output_folder = './html_translator/generated_html'#./generated_html 
 		model_json_file = './html_translator/bin/model_json.json'#../bin/model_json.json
@@ -611,7 +611,6 @@ def html_main():
 		print_generated_output = 0
 		print_bleu_score = 0
 		original_gui_filepath = None
-
 		if not os.path.exists(output_folder):
 			os.makedirs(output_folder)
 
@@ -623,8 +622,19 @@ def html_main():
 							get_sentence_bleu=print_bleu_score,
 							original_gui_filepath=original_gui_filepath,
 							style=style)
+		canvas.destroy()
 		webbrowser.open(output_folder+"/"+ntpath.basename(png_path).replace(".png", ".html"),new=1)
-
+# Language Translator
+'''
+class Translator():
+	def __init__(self,file_name,target_language,global_arr):
+		self.data2json(global_arr)
+		self.execute_file(file_name,target_language)
+		self.json2data()
+	def data2json(self,global_arr):
+	def json2data(self):
+	def execute_file(self,file_name,target_language):	
+'''
 #MAIN CODE 
 if __name__ =="__main__":
 	snippet = []
@@ -680,19 +690,19 @@ if __name__ =="__main__":
 		promenu.add_command(label="    World",font=Font2)
 		promenu.add_command(label="    Modules",font=Font2)
 		promenu.add_command(label="    New Project                 ",font=Font2,command=new_command)
-		promenu.add_separator()
-		promenu.add_command(label="    Create HTML",font=Font2,command=html_main)
 		openmenu = Menu(root,bg=color2,fg=color3)	
 		open_menu_button()
 		menu.add_cascade(label="Open",menu=openmenu,font=Font2)
 		menu.add_command(label="Undo", command=editor_undo,font=Font2)
+		menu.add_command(label="WireFrame => HTML",font=Font2,command=html_main)
 		menu.add_command(label="Forum/Help", command=lambda:browser("for") ,font=Font2)
 		menu.add_command(label="Documentations", command=lambda:browser("docs") ,font=Font2)
 		menu.add_command(label="Credits",font=Font2,command=lambda:browser("cre"))
 		menu.add_command(label="License",font=Font2,command=lambda:browser("lic"))
-		menu.add_command(label=" "*35+"Natural Language Coder "+current_nlc_version+" "*110)
-		menu.entryconfig(8, state=DISABLED)
+		menu.add_command(label=" "*30 ,state=DISABLED)
 		menu.add_command(label="Save", command=save_command,font=Font2)
 		menu.add_command(label="Run", command=runfile,font=Font2)
 		menu.add_command(label="Exit ", command=exit_command,font=Font2)
+		menu.add_command(label=" "*80+"Natural Language Coder "+current_nlc_version,state=DISABLED)
+		
 	root.mainloop()

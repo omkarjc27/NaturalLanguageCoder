@@ -6,26 +6,38 @@
 * Smart-Completion of Python Functions
 * Wire-Frame Drawing to HTML Code Converter 
 
-## Requirements
-* Currently program Does not have a stand alone installation 
-* Current Version fully supports all Linux OS
-* Windows is not completly supported
+## Pre-Requisites
 * Python 3.x
 * Tkinter (Which Supports Python 3.x)
-* PyFlakes
 * Json
-* Keras 2.1.2
-* tensorflow 1.4.0
-* nltk 3.2.5
-* opencv-python 3.3.0.10
-* numpy  1.13.1
-* h5py  2.7.1
-* matplotlib  2.0.2
-* Pillow  4.3.0
-* tqdm  4.17.1
-* scipy  1.0.0
 
+## Installation
+#### Download Repository
+```
 
+git clone https://github.com/omkarjc27/NaturalLanguageCoder.git
+
+```
+#### Download Requirements
+```
+
+cd NaturalLanguageCoder
+
+pip install -r requirements.txt
+
+```
+#### Download Data
+```
+
+python download_data.py
+
+```
+#### Run IDE
+```
+
+python run.py
+
+```
 ## Built With
 
 * [Conala-Corpus](www.conala-corpus.com) - The Dataset used
