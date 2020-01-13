@@ -13,7 +13,7 @@ import tkinter.font as tkFont
 import ast
 import ntpath
 import webbrowser
-from html_translator.inference.Sampler import *
+#from html_translator.inference.Sampler import *
 # readin and writeout are as name says
 def readin(rfile):
 	file = open(rfile,"r")
@@ -595,6 +595,7 @@ def browser(utype):
 	elif utype == "for":
 		webbrowser.open("https://github.com/omkarjc27/NaturalLanguageCoder/issues",new=1)
 #html code parser
+'''
 def html_main():
 	from os.path import basename
 	canvas = Tkinter.Canvas(root, height=height, width=width, bg="black")
@@ -626,6 +627,7 @@ def html_main():
 		webbrowser.open(output_folder+"/"+ntpath.basename(png_path).replace(".png", ".html"),new=1)
 # Language Translator
 '''
+'''
 class Translator():
 	def __init__(self,file_name,target_language,global_arr):
 		self.data2json(global_arr)
@@ -639,8 +641,8 @@ class Translator():
 if __name__ =="__main__":
 	snippet = []
 	intent = []
-	dire = "/home/omkar/Codes/NaturalLanguageCoder/nlc_proj/"
-	data_dire="/home/omkar/Codes/NaturalLanguageCoder/nlc_data/"
+	dire = "nlc_proj/"
+	data_dire="nlc_data/"
 	color1='#d3d3d3'
 	color2='#006b85'
 	color3='#d0d0d0'
@@ -694,7 +696,7 @@ if __name__ =="__main__":
 		open_menu_button()
 		menu.add_cascade(label="Open",menu=openmenu,font=Font2)
 		menu.add_command(label="Undo", command=editor_undo,font=Font2)
-		menu.add_command(label="WireFrame => HTML",font=Font2,command=html_main)
+		#menu.add_command(label="WireFrame => HTML",font=Font2,command=html_main)
 		menu.add_command(label="Forum/Help", command=lambda:browser("for") ,font=Font2)
 		menu.add_command(label="Documentations", command=lambda:browser("docs") ,font=Font2)
 		menu.add_command(label="Credits",font=Font2,command=lambda:browser("cre"))
